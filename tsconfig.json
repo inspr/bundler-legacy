@@ -1,0 +1,33 @@
+{
+    "exclude": ["__build__", "__tests__"],
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "jsx": "react-jsx",
+
+        "composite": true,
+        "allowJs": false,
+        "checkJs": false,
+        "strict": true,
+        "declaration": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "incremental": true,
+
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "pretty": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "assumeChangesOnlyAffectDirectDependencies": true,
+        "noImplicitAny": true,
+        "allowSyntheticDefaultImports": true
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "extends": "../../tsconfig.json",
+    "exclude": ["__tests__", "__build__"],
+    "compilerOptions": {
+        "baseUrl": "cmd",
+        "outDir": "__build__",
+        "rootDir": "src"
+    }
+}

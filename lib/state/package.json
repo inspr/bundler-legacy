@@ -1,0 +1,24 @@
+{
+    "name": "@primal/state",
+    "version": "0.0.0",
+    "description": "Primal State",
+    "license": "MIT",
+    "main": "__build__/index.js",
+    "types": "__build__/index.d.ts",
+    "files": [
+        "__build__"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git.inspr.com/primal/primal.git",
+        "directory": "pkg/state"
+    },
+    "scripts": {
+        "build": "tsc",
+        "prepare": "npm run build"
+    },
+    "publishConfig": {
+        "access": "public",
+        "@primal:registry": "https://registry.npmjs.org/"
+    }
+}
