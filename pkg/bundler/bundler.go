@@ -47,7 +47,7 @@ func NewBundler() *Bundler {
 			Bundle:   true,
 			Write:    false,
 			// AssetNames: "assets/[name]-[hash]",
-			EntryNames: "[dir]/[name]-[hash]",
+			// EntryNames: "[dir]/[name]-[hash]",
 			ChunkNames: "[name].[hash]",
 			Splitting:  false,
 			// Outfile: path + "/main.js",
@@ -60,14 +60,14 @@ func NewBundler() *Bundler {
 			LegalComments: api.LegalCommentsExternal,
 			JSXFactory:    "__jsx",
 			Loader: map[string]api.Loader{
-				// ".css": api.LoaderCSS,
+				".css": api.LoaderCSS,
 				".png": api.LoaderFile,
 				".svg": api.LoaderText,
 			},
 			PublicPath:        "/",
 			Format:            api.FormatESModule,
 			Incremental:       true,
-			ResolveExtensions: []string{".ts", ".js", ".tsx", ".jsx", ".png"},
+			ResolveExtensions: []string{".web.tsx", ".web.ts", ".ts", ".js", ".tsx", ".jsx", ".png"},
 		},
 	}
 }

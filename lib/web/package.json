@@ -1,0 +1,11 @@
+{
+    "name": "@primal/web",
+    "version": "0.0.0",
+    "description": "core elements that provides basic types and utilities that can be used between different apps",
+    "main": "index.ts",
+    "scripts": {
+    },
+    "author": "",
+    "license": "MIT"
+  }
+  

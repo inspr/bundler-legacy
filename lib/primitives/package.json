@@ -1,0 +1,30 @@
+{
+    "name": "@primal/primitives",
+    "version": "0.0.0",
+    "description": "UI component library for Primal",
+    "license": "MIT",
+    "sideEffects": false,
+    "main": "index.ts",
+    "types": "index.ts",
+    "repository": {
+        "type": "git",
+        "url": "git.inspr.com/primal/primal.git",
+        "directory": "extension/primitives"
+    },
+    "scripts": {
+    },
+    "peerDependencies": {
+        "@types/react": "^17.0.8",
+        "@types/react-dom": "^17.0.5",
+        "react": "*",
+        "react-dom": "*"
+    },
+    "devDependencies": {
+        "@types/node": "^15.6.1",
+        "@primal/core": "*"
+    },
+    "publishConfig": {
+        "access": "public",
+        "@primal:registry": "https://registry.npmjs.org/"
+    }
+}
