@@ -1,0 +1,10 @@
+node_modules
+__build__
+examples
+
+jest.config.js
+babel.config.js
+_babel.config.js
+
+*.test.ts
+*.d.ts

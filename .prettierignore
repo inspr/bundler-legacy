@@ -1,0 +1,7 @@
+*/**/**/__build__
+*/**/**/**/**/**/__build__
+platforms/native/template
+coverage/**/**
+*/**/**/*.yaml
+*.yaml
+*.yml
