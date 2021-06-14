@@ -1,4 +1,3 @@
-import { PropsWithChildren } from "react"
 
 type FlexAlignType = 'flex-start' | 'flex-end' | 'center' | 'stretch'
 
@@ -90,6 +89,9 @@ export interface ViewStyle extends FlexStyle {
     borderWidth?: number
     opacity?: number
     testID?: string
+
+    // TODO: move to be a prop of the view instead of a style
+    pointerEvents?: 'auto' | 'none'
 }
 
 export type FontVariant =

@@ -8,12 +8,7 @@ type ImageProps = JSX.IntrinsicAttributes & {
 const isDataURL = (src: string) => src.startsWith('data:image')
 
 const Image: FunctionComponent<ImageProps> = ({ source, style, key }) => {
-    const newProps = {
-        style,
-        src: source,
-        key,
-    }
-
+    const newProps = { style, src: source, key }
     return isDataURL(source) ? (
         <img {...newProps} />
     ) : (

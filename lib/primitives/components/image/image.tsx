@@ -16,8 +16,8 @@ export interface ImageProps extends Attributes {
 let RawImage: FunctionComponent
 
 if (__WEB__ || __SERVER__ || __ELECTRON__ || __UNIVERSAL__) {
-    RawImage = require('@primal/primitives/components/image/image.universal')
-        .default
+    RawImage =
+        require('@primal/primitives/components/image/image.universal').default
 }
 
 const Image = memo(({ children, ...props }: ImageProps) => {

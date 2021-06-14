@@ -1,4 +1,4 @@
-import { memo, Attributes, FunctionComponent } from 'react'
+import { Attributes, FunctionComponent, memo } from 'react'
 import { TextStyle } from '../../decorators/style'
 
 interface TextProps extends Attributes {
@@ -9,8 +9,8 @@ interface TextProps extends Attributes {
 
 let RawText: FunctionComponent
 if (__WEB__ || __SERVER__ || __ELECTRON__ || __UNIVERSAL__) {
-    RawText = require('@primal/primitives/components/text/text.universal')
-        .default
+    RawText =
+        require('@primal/primitives/components/text/text.universal').default
 }
 
 /* if (__NATIVE__) {
