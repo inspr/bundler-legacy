@@ -42,7 +42,7 @@ func (mfs *MemoryFs) Get(path string) ([]byte, error) {
 	if ok {
 		return data, nil
 	} else {
-		return nil, errors.New("file doesn't exist in filesystem")
+		return nil, fmt.Errorf("file %s doesn't exist in filesystem", path)
 	}
 }
 

@@ -3,8 +3,7 @@ package web
 import (
 	"context"
 
-	fs "inspr.dev/primal/pkg/filesystem"
-	op "inspr.dev/primal/pkg/operator"
+	"inspr.dev/primal/pkg/api"
 )
 
 type Html struct {
@@ -40,6 +39,12 @@ var htmlTmpl = `
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="preload" href="/client.css" as="style">
+	<link rel="preload" href="/client.js" as="script">
+	<link rel="preload" href="/assets/logo.VWJGXQZ7.png" as="image">
+	<link rel="preload" href="/assets/bg.J2FRSW2E.png" as="image">
+
     <link rel="stylesheet" href="/client.css">
     <title>Primal</title>
 </head>
@@ -50,13 +55,13 @@ var htmlTmpl = `
 </html>
 `
 
-func (h *Html) Apply(ctx context.Context, spec op.Spec, fs fs.FileSystem) error {
+func (h *Html) Apply(ctx context.Context, spec api.Spec) error {
 	select {
 	case <-ctx.Done():
 		return nil
 	default:
 		html := htmlTmpl
-		fs.Write("/index.html", []byte(html))
+		spec.Files.Write("/index.html", []byte(html))
 
 		h.progress <- 1.0
 		h.messages <- " 🎉 compiled html file with success"

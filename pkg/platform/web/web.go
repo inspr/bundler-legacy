@@ -5,13 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/evanw/esbuild/pkg/api"
-	fs "inspr.dev/primal/pkg/filesystem"
-	op "inspr.dev/primal/pkg/operator"
+	esbuild "github.com/evanw/esbuild/pkg/api"
+	api "inspr.dev/primal/pkg/api"
 )
 
 type Bundler struct {
-	options api.BuildOptions
+	options esbuild.BuildOptions
 
 	root string
 
@@ -22,10 +21,10 @@ type Bundler struct {
 
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
 var Definition = map[string]string{"__WEB__": "true"}
-var LoadableExtensions = map[string]api.Loader{
-	".css": api.LoaderCSS,
-	".png": api.LoaderFile,
-	".svg": api.LoaderText,
+var LoadableExtensions = map[string]esbuild.Loader{
+	".css": esbuild.LoaderCSS,
+	".png": esbuild.LoaderFile,
+	".svg": esbuild.LoaderText,
 }
 
 func AddPlatformExtensions(platform string, baseExt []string) []string {
@@ -48,7 +47,7 @@ func NewBundler() *Bundler {
 
 		root: path,
 
-		options: api.BuildOptions{
+		options: esbuild.BuildOptions{
 			Bundle:            true,
 			Incremental:       true,
 			Metafile:          true,
@@ -60,12 +59,12 @@ func NewBundler() *Bundler {
 			Outdir:            path,
 			Define:            Definition,
 			Loader:            LoadableExtensions,
-			Platform:          api.PlatformBrowser,
-			Target:            api.ES2015,
-			LogLevel:          api.LogLevelSilent,
-			Sourcemap:         api.SourceMapExternal,
-			LegalComments:     api.LegalCommentsExternal,
-			Format:            api.FormatESModule,
+			Platform:          esbuild.PlatformBrowser,
+			Target:            esbuild.ES2015,
+			LogLevel:          esbuild.LogLevelSilent,
+			Sourcemap:         esbuild.SourceMapExternal,
+			LegalComments:     esbuild.LegalCommentsExternal,
+			Format:            esbuild.FormatESModule,
 			PublicPath:        "/",
 			JSXFactory:        "__jsx",
 			ResolveExtensions: AddPlatformExtensions("web", Extensions),
@@ -100,18 +99,18 @@ func (bundler *Bundler) Target(name string) *Bundler {
 
 	switch name {
 	case "client":
-		bundler.options.Stdin = &api.StdinOptions{
+		bundler.options.Stdin = &esbuild.StdinOptions{
 			Contents:   clientEntry,
 			ResolveDir: bundler.root,
 			Sourcefile: "client.js",
-			Loader:     api.LoaderTSX,
+			Loader:     esbuild.LoaderTSX,
 		}
 	case "server":
-		bundler.options.Stdin = &api.StdinOptions{
+		bundler.options.Stdin = &esbuild.StdinOptions{
 			Contents:   serverEntry,
 			ResolveDir: bundler.root,
 			Sourcefile: "server.js",
-			Loader:     api.LoaderTSX,
+			Loader:     esbuild.LoaderTSX,
 		}
 	default:
 		panic("target must be client or server")
@@ -120,12 +119,12 @@ func (bundler *Bundler) Target(name string) *Bundler {
 	return bundler
 }
 
-func (bundler *Bundler) Apply(ctx context.Context, spec op.Spec, fs fs.FileSystem) error {
+func (bundler *Bundler) Apply(ctx context.Context, spec api.Spec) error {
 	select {
 	case <-ctx.Done():
 		return nil
 	default:
-		r := api.Build(bundler.options)
+		r := esbuild.Build(bundler.options)
 		errs := r.Errors
 
 		if len(errs) != 0 {
@@ -145,7 +144,7 @@ func (bundler *Bundler) Apply(ctx context.Context, spec op.Spec, fs fs.FileSyste
 			outFile = strings.Replace(outFile, "stdin", "client", -1)
 			// outFile = strings.ToLower(outFile)
 
-			err := fs.Write(outFile, out.Contents)
+			err := spec.Files.Write(outFile, out.Contents)
 			if err != nil {
 				panic(err)
 			}
@@ -154,7 +153,7 @@ func (bundler *Bundler) Apply(ctx context.Context, spec op.Spec, fs fs.FileSyste
 			count = count + 1.0
 		}
 
-		err := fs.Write("/meta.json", []byte(r.Metafile))
+		err := spec.Files.Write("/meta.json", []byte(r.Metafile))
 		if err != nil {
 			panic(err)
 		}
