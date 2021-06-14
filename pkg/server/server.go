@@ -24,6 +24,10 @@ func SetContentType(w http.ResponseWriter, file string) {
 	}
 }
 
+func SetCacheDuration(w http.ResponseWriter, seconds int64) {
+	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
+}
+
 func Run(files filesystem.FileSystem) {
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
@@ -41,6 +45,7 @@ func Run(files filesystem.FileSystem) {
 
 		if err == nil {
 			SetContentType(w, path)
+			SetCacheDuration(w, 31536000)
 			w.Write(file)
 		} else {
 			w.WriteHeader(404)
