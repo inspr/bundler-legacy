@@ -38,15 +38,24 @@ import logo from './logo.png'
 //     console.log(v)
 // })
 
-const Title = style(Text, {
-    fontSize: 58,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontFamily: 'Open Sauce One',
-    letterSpacing: -0.9,
-    lineHeight: 1.22,
-})
+// const Text2: FunctionComponent =
 
+const Title = style(
+    ({ children, ...props }) => <Text {...props}>{children}</Text>,
+    {
+        fontSize: 58,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontFamily: 'Open Sauce One',
+        letterSpacing: -0.9,
+        lineHeight: 1.22,
+    }
+)
+
+/**
+ * ZStack - render the children elements as layers stcked in the Z direction (a.k.a depth)
+ * @returns JSX.Element
+ */
 const ZStack: FunctionComponent = ({ children, ...props }) => {
     if (Array.isArray(children)) {
         children = children.map((child, idx) => {
@@ -79,28 +88,37 @@ interface HeaderProps {
 
 const Header = (props: HeaderProps) => (
     <View style={{ top: 0, left: 0, right: 0, padding: 40, ...props.style }}>
-        <Image source={logo} style={{ width: 22, height: 22 }} />
+        <a href='/'>
+            <Image source={logo} style={{ width: 22, height: 22 }} />
+        </a>
     </View>
 )
 
-const Logo = () => (
+const Background = () => (
     <Image source={bg} style={{ width: '50vw', height: '100vh' }} />
 )
+
+const Hero = () => (
+    <HStack>
+        <Center
+            style={{
+                backgroundColor: 'white',
+                padding: 80,
+                width: '50vw',
+            }}>
+            <Title>Cloud Connectivity, Simplified</Title>
+        </Center>
+        <Background />
+    </HStack>
+)
+
+// const LeftSide = () => {}
+// const RightSide = () => {}
 
 const Root = () => (
     <StrictMode>
         <ZStack>
-            <HStack>
-                <Center
-                    style={{
-                        backgroundColor: 'white',
-                        padding: 80,
-                        width: '50vw',
-                    }}>
-                    <Title>Cloud Connectivity, Simplified</Title>
-                </Center>
-                <Logo />
-            </HStack>
+            <Hero />
             <Header />
         </ZStack>
     </StrictMode>

@@ -7,29 +7,17 @@ import (
 )
 
 type Html struct {
-	progress chan float32
-	messages chan string
-	done     chan bool
+	meta api.Metadata
 }
 
 func NewHtml() *Html {
 	return &Html{
-		progress: make(chan float32),
-		messages: make(chan string),
-		done:     make(chan bool),
+		meta: api.NewMetadata(),
 	}
 }
 
-func (h *Html) Progress() <-chan float32 {
-	return h.progress
-}
-
-func (h *Html) Messages() <-chan string {
-	return h.messages
-}
-
-func (h *Html) Done() <-chan bool {
-	return h.done
+func (h *Html) Meta() api.Metadata {
+	return h.meta
 }
 
 var htmlTmpl = `
@@ -55,17 +43,19 @@ var htmlTmpl = `
 </html>
 `
 
-func (h *Html) Apply(ctx context.Context, spec api.Spec) error {
+func (h *Html) Apply(ctx context.Context, opts api.OperatorOptions) error {
+	h.meta.State <- api.WORKING
+
 	select {
 	case <-ctx.Done():
 		return nil
 	default:
 		html := htmlTmpl
-		spec.Files.Write("/index.html", []byte(html))
+		opts.Files.Write("/index.html", []byte(html))
 
-		h.progress <- 1.0
-		h.messages <- " 🎉 compiled html file with success"
-		h.done <- true
+		h.meta.Progress <- 1.0
+		h.meta.Messages <- " 🎉 compiled html file with success"
+		h.meta.State <- api.DONE
 		return nil
 	}
 }

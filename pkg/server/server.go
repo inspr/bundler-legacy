@@ -1,13 +1,26 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
 
-	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/api"
 )
+
+type Server struct {
+	port int
+	meta api.Metadata
+}
+
+func NewServer(port int) *Server {
+	return &Server{
+		port: port,
+		meta: api.NewMetadata(),
+	}
+}
 
 func SetContentType(w http.ResponseWriter, file string) {
 	ext := filepath.Ext(file)
@@ -28,7 +41,9 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
 
-func Run(files filesystem.FileSystem) {
+func (s *Server) Apply(ctx context.Context, opts api.OperatorOptions) error {
+	s.meta.State <- api.WORKING
+
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		var file []byte
@@ -38,9 +53,9 @@ func Run(files filesystem.FileSystem) {
 
 		switch path {
 		case "/":
-			file, err = files.Get("/index.html")
+			file, err = opts.Files.Get("/index.html")
 		default:
-			file, err = files.Get(path)
+			file, err = opts.Files.Get(path)
 		}
 
 		if err == nil {
@@ -52,6 +67,15 @@ func Run(files filesystem.FileSystem) {
 		}
 	})
 
-	fmt.Println("Available on http://127.0.0.1:3049")
-	log.Fatal(http.ListenAndServe(":3049", nil))
+	s.meta.Messages <- fmt.Sprintf("Available on http://127.0.0.1:%d", s.port)
+	// s.done <- true
+	s.meta.Progress <- 1.0
+	s.meta.State <- api.READY
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil))
+	return nil
+}
+
+func (s *Server) Meta() api.Metadata {
+	return s.meta
 }

@@ -6,9 +6,16 @@ import (
 	fs "inspr.dev/primal/pkg/filesystem"
 )
 
-type Spec struct {
-	// Loaction of the app Root on Primal's FileSysten
+const (
+	READY = iota
+	WORKING
+	DONE
+)
+
+type OperatorOptions struct {
 	Root string
+
+	Watch bool
 
 	// Environment variables
 	Enviroment map[string]string
@@ -20,14 +27,6 @@ type Spec struct {
 // Think about an operator as a step.
 // Primal will look an operator, execute and then call the operators defined by its next func
 type Operator interface {
-	Apply(ctx context.Context, spec Spec) error
-
-	// Progress return a channel of numbers from 0.0 ... 1.0 used to inform the % completed by a task
-	Progress() <-chan float32
-
-	// Messages return relevant information about the operator step
-	Messages() <-chan string
-
-	// Done inform if an operator fully executed or not
-	Done() <-chan bool
+	Apply(ctx context.Context, opts OperatorOptions) error
+	Meta() Metadata
 }

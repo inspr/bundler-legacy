@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,12 +12,8 @@ import (
 
 type Bundler struct {
 	options esbuild.BuildOptions
-
-	root string
-
-	progress chan float32
-	messages chan string
-	done     chan bool
+	root    string
+	meta    api.Metadata
 }
 
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
@@ -41,11 +38,8 @@ func NewBundler() *Bundler {
 	path, _ := os.Getwd()
 
 	return &Bundler{
-		progress: make(chan float32),
-		messages: make(chan string),
-		done:     make(chan bool),
-
 		root: path,
+		meta: api.NewMetadata(),
 
 		options: esbuild.BuildOptions{
 			Bundle:            true,
@@ -119,59 +113,67 @@ func (bundler *Bundler) Target(name string) *Bundler {
 	return bundler
 }
 
-func (bundler *Bundler) Apply(ctx context.Context, spec api.Spec) error {
+func (bundler *Bundler) Apply(ctx context.Context, opts api.OperatorOptions) error {
+	bundler.meta.State <- api.WORKING
+
 	select {
 	case <-ctx.Done():
 		return nil
 	default:
+
+		if opts.Watch {
+			bundler.options.Watch = &esbuild.WatchMode{
+				OnRebuild: func(result esbuild.BuildResult) {
+					if len(result.Errors) > 0 {
+						fmt.Printf("watch build failed: %d errors\n", len(result.Errors))
+					} else {
+						fmt.Printf("watch build succeeded: %d warnings\n", len(result.Warnings))
+					}
+				},
+			}
+		}
+
 		r := esbuild.Build(bundler.options)
 		errs := r.Errors
 
 		if len(errs) != 0 {
-			bundler.messages <- "failed with errors"
+			bundler.meta.Messages <- "failed with errors"
 			for _, err := range errs {
-				bundler.messages <- err.Text
+				bundler.meta.Messages <- err.Text
 			}
 		} else {
-			bundler.messages <- "compiled for platform web with success"
+			bundler.meta.Messages <- "compiled for platform web with success"
 		}
 
 		total := float32(len(r.OutputFiles))
 		count := float32(1.0)
 
 		for _, out := range r.OutputFiles {
-			outFile := strings.TrimPrefix(out.Path, spec.Root)
+			outFile := strings.TrimPrefix(out.Path, opts.Root)
 			outFile = strings.Replace(outFile, "stdin", "client", -1)
 			// outFile = strings.ToLower(outFile)
 
-			err := spec.Files.Write(outFile, out.Contents)
+			err := opts.Files.Write(outFile, out.Contents)
 			if err != nil {
 				panic(err)
 			}
 
-			bundler.progress <- count / total
+			bundler.meta.Progress <- count / total
 			count = count + 1.0
 		}
 
-		err := spec.Files.Write("/meta.json", []byte(r.Metafile))
+		err := opts.Files.Write("/meta.json", []byte(r.Metafile))
+
 		if err != nil {
 			panic(err)
 		}
 
-		bundler.done <- true
+		bundler.meta.State <- api.DONE
 
 		return nil
 	}
 }
 
-func (bundler *Bundler) Progress() <-chan float32 {
-	return bundler.progress
-}
-
-func (bundler *Bundler) Messages() <-chan string {
-	return bundler.messages
-}
-
-func (bundler *Bundler) Done() <-chan bool {
-	return bundler.done
+func (b *Bundler) Meta() api.Metadata {
+	return b.meta
 }

@@ -4,18 +4,16 @@
     "description": "core elements that provides basic types and utilities that can be used between different apps",
     "main": "index.ts",
     "types": "index.d.ts",
-    "scripts": {
-    },
+    "scripts": {},
     "author": "",
     "license": "MIT",
     "dependencies": {
-      "preact": "10.5.13",
-      "react": "^17.0.2",
-      "react-dom": "^17.0.2"
+        "preact": "10.5.13",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2"
     },
     "devDependencies": {
-      "@types/react": "^17.0.5",
-      "@types/react-dom": "^17.0.5"
+        "@types/react": "^17.0.5",
+        "@types/react-dom": "^17.0.5"
     }
-  }
-  
+}

@@ -3,7 +3,7 @@ import { TextStyle } from '../../decorators/style'
 
 interface TextProps extends Attributes {
     style?: TextStyle
-    children?: string
+    children?: React.ReactNode
     // id?: number | string
 }
 

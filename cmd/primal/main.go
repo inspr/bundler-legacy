@@ -6,14 +6,17 @@ import (
 	"os"
 
 	"inspr.dev/primal/pkg/api"
+	"inspr.dev/primal/pkg/disk"
 	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/logger"
 	"inspr.dev/primal/pkg/platform/web"
 	"inspr.dev/primal/pkg/server"
 )
 
 type Compiler struct {
 	operators []api.Operator
-	spec      api.Spec
+	Root      string
+	Files     filesystem.FileSystem
 }
 
 func (c *Compiler) Add(ops ...api.Operator) *Compiler {
@@ -24,10 +27,8 @@ func (c *Compiler) Add(ops ...api.Operator) *Compiler {
 func NewCompiler(root string, fs filesystem.FileSystem) *Compiler {
 	cp := &Compiler{
 		operators: []api.Operator{},
-		spec: api.Spec{
-			Root:  root,
-			Files: fs,
-		},
+		Root:      root,
+		Files:     fs,
 	}
 
 	return cp
@@ -35,35 +36,51 @@ func NewCompiler(root string, fs filesystem.FileSystem) *Compiler {
 
 func (c *Compiler) Apply() {
 	ctx := context.Background()
-	spec := c.spec
-
-	// defer cancel()
 
 	for _, op := range c.operators {
-		(func() {
-			go op.Apply(ctx, spec)
+		opts := api.OperatorOptions{
+			Root:       c.Root,
+			Enviroment: make(map[string]string),
+			Files:      c.Files,
+		}
+
+		runOperator := func() {
+			go op.Apply(ctx, opts)
 
 			for {
 				select {
-				case <-op.Done():
-					return
-				case msg := <-op.Messages():
+				case state := <-op.Meta().State:
+					if state == api.DONE {
+						return
+					}
+
+					if state == api.READY {
+						continue
+					}
+
+					if state == api.WORKING {
+						fmt.Println("Working")
+					}
+
+				case msg := <-op.Meta().Messages:
 					fmt.Println(msg)
-				case v := <-op.Progress():
+				case v := <-op.Meta().Progress:
 					fmt.Println(v)
 				}
 			}
-		})()
+		}
+
+		runOperator()
 	}
 }
 
 func (c *Compiler) String() string {
-	return fmt.Sprint(c.spec.Files)
+	return fmt.Sprint(c.Files)
 }
 
-func (c *Compiler) WriteToDisk(dest string) error {
-	return c.spec.Files.Flush(dest)
-}
+// func (c *Compiler) WriteToDisk(dest string) error {
+// 	return c.Files.Flush(dest)
+// }
 
 func main() {
 	root, _ := os.Getwd()
@@ -72,14 +89,13 @@ func main() {
 
 	Bundler := web.NewBundler().WithMinification().Target("client")
 	HtmlGen := web.NewHtml()
+	Disk := disk.NewDisk("./__build2__")
+	Server := server.NewServer(3049)
+	Logger := logger.NewLogger()
 
 	primal.
-		Add(Bundler, HtmlGen).
+		Add(Bundler).
+		Add(HtmlGen).
+		Add(Logger, Disk, Server).
 		Apply()
-
-	err := primal.WriteToDisk("./__build__")
-	fmt.Println(err)
-	fmt.Println(primal)
-
-	server.Run(primal.spec.Files)
 }

@@ -1,3 +1,4 @@
+import React, { PropsWithChildren } from 'react'
 
 type FlexAlignType = 'flex-start' | 'flex-end' | 'center' | 'stretch'
 
@@ -163,7 +164,7 @@ export type StyleProps<P> = PrimalStyle | PrimalStyleFn<P>
  * @desc Apply a style on a target component
  * @param styleProps - The style to be applied
  */
-function style<P extends { style?: ViewStyle }, X>(
+function style<P extends PropsWithChildren<{ style?: ViewStyle }>, X = {}>(
     component: React.ComponentType<P>,
     styleProps: StyleProps<X>
 ): React.FunctionComponent<P> {
@@ -172,7 +173,7 @@ function style<P extends { style?: ViewStyle }, X>(
     return (props) => {
         let newStyle = styleProps
 
-        if (typeof styleProps === "function") {
+        if (typeof styleProps === 'function') {
             // @ts-ignore
             newStyle = styleProps(props)
         }
