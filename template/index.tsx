@@ -7,50 +7,23 @@ import {
     View,
     ViewStyle,
 } from '@primal/primitives'
+import { createState, state } from '@primal/state'
 import { cloneElement, FunctionComponent, StrictMode } from 'react'
 import bg from './bg.png'
 import logo from './logo.png'
 
-// const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-// const dark = createState({ dark: darkModeMediaQuery.matches })
+const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+const dark = createState({ dark: darkModeMediaQuery.matches })
 
-// darkModeMediaQuery.addListener((e) => {
-//     const darkModeOn = e.matches
-//     dark.publish({ dark: darkModeOn })
-//     console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
-// })
+darkModeMediaQuery.addListener((e) => {
+    const darkModeOn = e.matches
+    dark.publish({ dark: darkModeOn })
+    console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
+})
 
-// interface DarkProps {
-//     dark: boolean
-// }
-
-// const DarkView = state(
-//     style(View, ({ dark }: DarkProps) => ({
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         flexDirection: 'column',
-//         backgroundColor: dark ? 'black' : 'white',
-//     })),
-//     dark
-// )
-
-// dark.subscribe((v) => {
-//     console.log(v)
-// })
-
-// const Text2: FunctionComponent =
-
-const Title = style(
-    ({ children, ...props }) => <Text {...props}>{children}</Text>,
-    {
-        fontSize: 58,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: 'Open Sauce One',
-        letterSpacing: -0.9,
-        lineHeight: 1.22,
-    }
-)
+interface DarkProps {
+    dark: boolean
+}
 
 /**
  * ZStack - render the children elements as layers stcked in the Z direction (a.k.a depth)
@@ -86,11 +59,27 @@ interface HeaderProps {
     style?: ViewStyle
 }
 
+const Logo = state(
+    style(
+        ({ style }) => (
+            <a href='/'>
+                <Image
+                    source={logo}
+                    style={{ width: 22, height: 22, ...style }}
+                />
+            </a>
+        ),
+        // @ts-ignore
+        ({ dark }: DarkProps) => ({
+            filter: dark ? 'invert(100%)' : 'invert(0%)',
+        })
+    ),
+    dark
+)
+
 const Header = (props: HeaderProps) => (
     <View style={{ top: 0, left: 0, right: 0, padding: 40, ...props.style }}>
-        <a href='/'>
-            <Image source={logo} style={{ width: 22, height: 22 }} />
-        </a>
+        <Logo />
     </View>
 )
 
@@ -98,16 +87,52 @@ const Background = () => (
     <Image source={bg} style={{ width: '50vw', height: '100vh' }} />
 )
 
+const BgView = state(
+    style(Center, ({ dark }: DarkProps) => ({
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+
+        padding: 80,
+        width: '50vw',
+
+        backgroundColor: dark ? 'black' : 'white',
+    })),
+    dark
+)
+
+// const Title = state(
+//     style(Center, ({ dark }: DarkProps) => ({
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//         flexDirection: 'column',
+
+//         padding: 80,
+//         width: '50vw',
+
+//         backgroundColor: dark ? 'black' : 'white',
+//     })),
+//     dark
+// )
+
+const Title = state(
+    style(Text, ({ dark }: DarkProps) => ({
+        fontSize: 58,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontFamily: 'Open Sauce One',
+        letterSpacing: -0.9,
+        lineHeight: 1.22,
+        color: dark ? 'white' : 'black',
+    })),
+    dark
+)
+
 const Hero = () => (
     <HStack>
-        <Center
-            style={{
-                backgroundColor: 'white',
-                padding: 80,
-                width: '50vw',
-            }}>
+        <BgView>
             <Title>Cloud Connectivity, Simplified</Title>
-        </Center>
+        </BgView>
         <Background />
     </HStack>
 )
