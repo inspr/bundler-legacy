@@ -22,19 +22,28 @@ func NewServer(port int) *Server {
 	}
 }
 
+var ContentTypes = map[string]string{
+	".css": "text/css; charset=UTF-8",
+
+	".js":  "application/javascript; charset=UTF-8",
+	".mjs": "application/javascript; charset=UTF-8",
+
+	".json":   "application/json; charset=UTF-8",
+	".jsonld": "application/ld+json; charset=UTF-8",
+
+	".png":  "image/png",
+	".webp": "image/webp",
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".svg":  "image/svg+xml; charset=utf-8",
+
+	".woff":  "font/woff",
+	".woff2": "font/woff2",
+}
+
 func SetContentType(w http.ResponseWriter, file string) {
 	ext := filepath.Ext(file)
-
-	switch ext {
-	case ".css":
-		w.Header().Add("Content-Type", "text/css; charset=UTF-8")
-	case ".js":
-		w.Header().Add("Content-Type", "application/javascript; charset=UTF-8")
-	case ".json":
-		w.Header().Add("Content-Type", "application/json; charset=UTF-8")
-	case ".png":
-		w.Header().Add("Content-Type", "image/png; charset=utf-8")
-	}
+	w.Header().Add("Content-Type", ContentTypes[ext])
 }
 
 func SetCacheDuration(w http.ResponseWriter, seconds int64) {
@@ -50,6 +59,7 @@ func (s *Server) Apply(ctx context.Context, opts api.OperatorOptions) error {
 		var err error
 
 		path := r.URL.Path[0:]
+		s.meta.Messages <- fmt.Sprintf("serving %s", path)
 
 		switch path {
 		case "/":
