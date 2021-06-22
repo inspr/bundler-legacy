@@ -4,27 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/olekukonko/tablewriter"
 )
-
-// // Move to interface
-// type FileSystem interface {
-
-// 	// Get return the file in a file system, given a path (ext included)
-// 	Get(path string) ([]byte, error)
-
-// 	// Match return a list of file paths that match the requested regex
-// 	// this function is useful to select files to apply operations
-// 	Match(regex string) ([]string, error)
-
-// 	// GetAll return the files that match a given regex
-// 	// think of it as a combination of Get and Match
-// 	GetAll(regex string) ([]byte, error)
-
-// 	WriteFile(path string, data []byte)
-// }
 
 type MemoryFs struct {
 	store map[string][]byte
@@ -44,14 +26,6 @@ func (mfs *MemoryFs) Get(path string) ([]byte, error) {
 	} else {
 		return nil, fmt.Errorf("file %s doesn't exist in filesystem", path)
 	}
-}
-
-func (mfs *MemoryFs) Match(regex string) ([]string, error) {
-	return nil, nil
-}
-
-func (mfs *MemoryFs) GetAll(regex string) ([]byte, error) {
-	return nil, nil
 }
 
 func (mfs *MemoryFs) Write(path string, data []byte) error {
@@ -74,6 +48,10 @@ func (mfs *MemoryFs) List() []string {
 	}
 
 	return paths
+}
+
+func (mfs *MemoryFs) Raw() map[string][]byte {
+	return mfs.store
 }
 
 func ByteCountSI(b int) string {
@@ -111,23 +89,4 @@ func (mfs *MemoryFs) String() string {
 	table.Render()
 
 	return writer.String()
-}
-
-func (mfs *MemoryFs) Flush(path string) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, 0755)
-		os.Mkdir(path+"/assets", 0755)
-	}
-
-	for key, file := range mfs.store {
-		f, err := os.Create(path + key)
-
-		if err != nil {
-			return err
-		}
-
-		f.Write(file)
-	}
-
-	return nil
 }
