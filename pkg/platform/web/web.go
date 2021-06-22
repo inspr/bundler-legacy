@@ -14,6 +14,7 @@ type Bundler struct {
 	options esbuild.BuildOptions
 	root    string
 	meta    api.Metadata
+	mode    string
 }
 
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
@@ -41,6 +42,7 @@ func NewBundler() *Bundler {
 		root: path,
 		meta: api.NewMetadata(),
 
+		mode: "",
 		options: esbuild.BuildOptions{
 			Bundle:            true,
 			Incremental:       true,
@@ -93,6 +95,7 @@ func (bundler *Bundler) Target(name string) *Bundler {
 
 	switch name {
 	case "client":
+		bundler.mode = "client"
 		bundler.options.Stdin = &esbuild.StdinOptions{
 			Contents:   clientEntry,
 			ResolveDir: bundler.root,
@@ -100,6 +103,7 @@ func (bundler *Bundler) Target(name string) *Bundler {
 			Loader:     esbuild.LoaderTSX,
 		}
 	case "server":
+		bundler.mode = "server"
 		bundler.options.Stdin = &esbuild.StdinOptions{
 			Contents:   serverEntry,
 			ResolveDir: bundler.root,
@@ -150,12 +154,18 @@ func (bundler *Bundler) Apply(ctx context.Context, opts api.OperatorOptions) err
 
 		for _, out := range r.OutputFiles {
 			outFile := strings.TrimPrefix(out.Path, opts.Root)
-			outFile = strings.Replace(outFile, "stdin", "client", -1)
+
+			switch bundler.mode {
+			case "server":
+				outFile = strings.Replace(outFile, "stdin", "server", -1)
+			default:
+				outFile = strings.Replace(outFile, "stdin", "client", -1)
+			}
 			// outFile = strings.ToLower(outFile)
 
 			err := opts.Files.Write(outFile, out.Contents)
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 
 			bundler.meta.Progress <- count / total
@@ -165,10 +175,11 @@ func (bundler *Bundler) Apply(ctx context.Context, opts api.OperatorOptions) err
 		err := opts.Files.Write("/meta.json", []byte(r.Metafile))
 
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
 		}
 
 		bundler.meta.State <- api.DONE
+		r.Stop()
 
 		return nil
 	}
