@@ -6,7 +6,7 @@ import (
 	"rogchap.com/v8go"
 )
 
-func Run(files map[string][]byte) {
+func Run(file []byte) {
 	iso, _ := v8go.NewIsolate() // creates a new JavaScript VM
 	defer iso.Dispose()
 
@@ -20,7 +20,7 @@ func Run(files map[string][]byte) {
 	global.Set("run", runFn)                 // sets the "print" property of the Object to our function
 	ctx1, _ := v8go.NewContext(iso, global)  // new Context with the global Object set to our object template
 
-	_, err := ctx1.RunScript(string(files["/__build__/stdin.js"]), "stdin.js")
+	_, err := ctx1.RunScript(string(file), "stdin.js")
 	if err != nil {
 		fmt.Println(err)
 	}
