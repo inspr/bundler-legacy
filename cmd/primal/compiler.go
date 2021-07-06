@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/filesystem"
@@ -30,45 +31,49 @@ func NewCompiler(root string, fs filesystem.FileSystem) *Compiler {
 }
 
 func (c *Compiler) Apply() {
-	ctx := context.Background()
+	opts := api.OperatorOptions{
+		Root:       c.Root,
+		Enviroment: make(map[string]string),
+		Watch:      true,
+	}
 
-	for _, op := range c.operators {
-		opts := api.OperatorOptions{
-			Root:       c.Root,
-			Enviroment: make(map[string]string),
-			Files:      c.Files,
-			Watch:      true,
+	var wg sync.WaitGroup
+
+	// Main:
+	for idx, op := range c.operators {
+		wg.Add(1)
+
+		props := api.OperatorProps{
+			Context: context.Background(),
+			Files:   c.Files,
 		}
 
-		runOperator := func() {
-			go op.Apply(ctx, opts)
+		go op.Apply(props, opts)
 
+		go func(idx int, op api.Operator) {
 			for {
 				select {
-				case state := <-op.Meta().State:
-					if state == api.DONE {
-						fmt.Println("DONE")
-						return
-					}
-
-					if state == api.READY {
-						continue
-					}
-
-					if state == api.WORKING {
-						fmt.Println("Working")
+				case <-op.Meta().Updated:
+					fmt.Println("updated")
+					for idx2, opx := range c.operators {
+						if idx != idx2 {
+							opx.Meta().Refresh <- true
+						}
 					}
 
 				case msg := <-op.Meta().Messages:
 					fmt.Println(msg)
-				case v := <-op.Meta().Progress:
-					fmt.Println(v)
+
+				case <-op.Meta().Done:
+					op.Meta().Close <- true
+					wg.Done()
+					return
 				}
 			}
-		}
-
-		runOperator()
+		}(idx, op)
 	}
+
+	wg.Wait()
 }
 
 func (c *Compiler) String() string {

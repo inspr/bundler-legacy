@@ -7,19 +7,45 @@ import {
     View,
     ViewStyle,
 } from '@primal/primitives'
-import { createState, state } from '@primal/state'
+import { cache, createState, map, state } from '@primal/state'
 import { cloneElement, FunctionComponent, StrictMode } from 'react'
 import bg from './bg.png'
 import logo from './logo.png'
 
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/template/sw.js').then(
+            (registration) => {
+                // Registration was successful
+                console.log(
+                    'ServiceWorker registration successful with scope: ',
+                    registration.scope
+                )
+            },
+            (err) => {
+                // registration failed :(
+                console.log('ServiceWorker registration failed: ', err)
+            }
+        )
+    })
+}
+
 const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-const dark = createState({ dark: darkModeMediaQuery.matches })
+const dark = cache(createState({ dark: darkModeMediaQuery.matches }), 'isDark')
 
 darkModeMediaQuery.addListener((e) => {
     const darkModeOn = e.matches
     dark.publish({ dark: darkModeOn })
+    // title.publish(createTitle(darkModeOn))
     console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
 })
+
+const title = map(
+    dark,
+    ({ dark: darkIsOn }) => `Primal | Mode is ${darkIsOn ? 'dark' : 'light'}`
+)
+
+title.subscribe((t) => (document.title = t))
 
 interface DarkProps {
     dark: boolean
@@ -120,7 +146,7 @@ const Title = state(
         fontSize: 58,
         fontWeight: 'bold',
         textAlign: 'center',
-        fontFamily: 'Open Sauce One',
+        fontFamily: 'Open Sauce One, sans-serif',
         letterSpacing: -0.9,
         lineHeight: 1.22,
         color: dark ? 'white' : 'black',
@@ -131,7 +157,7 @@ const Title = state(
 const Hero = () => (
     <HStack>
         <BgView>
-            <Title>Cloud Connectivity, Simplified</Title>
+            <Title>Product Development, Simplified</Title>
         </BgView>
         <Background />
     </HStack>
@@ -148,5 +174,9 @@ const Root = () => (
         </ZStack>
     </StrictMode>
 )
+
+import('./test').then(({ works }) => {
+    console.log('works: ', works)
+})
 
 export default Root

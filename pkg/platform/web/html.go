@@ -1,8 +1,6 @@
 package web
 
 import (
-	"context"
-
 	"inspr.dev/primal/pkg/api"
 )
 
@@ -27,35 +25,39 @@ var htmlTmpl = `
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-	<link rel="preload" href="/client.css" as="style">
-	<link rel="preload" href="/client.js" as="script">
-	<link rel="preload" href="/assets/logo.VWJGXQZ7.png" as="image">
-	<link rel="preload" href="/assets/bg.J2FRSW2E.png" as="image">
-
-    <link rel="stylesheet" href="/client.css">
-    <title>Primal</title>
+	<meta name="theme-color" content="white">
+	<meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+	<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
+	<link rel="preload" href="/entry-client.css" as="style">
+	<link rel="modulepreload" href="/entry-client.js">
+	<link rel="modulepreload" href="/react-dom.RT5KN4QJ.js">
+    <link rel="stylesheet" href="/entry-client.css">
+	<title>Primal</title>
 </head>
 <body>
     <div id="root"></div>
 </body>
-<script src="/client.js" ></script>
+<script type="module" src="/entry-client.js" ></script>
 </html>
 `
 
-func (h *Html) Apply(ctx context.Context, opts api.OperatorOptions) error {
-	h.meta.State <- api.WORKING
-
-	select {
-	case <-ctx.Done():
-		return nil
-	default:
+func (h *Html) Apply(props api.OperatorProps, opts api.OperatorOptions) {
+	var writeHtml = func() {
 		html := htmlTmpl
-		opts.Files.Write("/index.html", []byte(html))
-
-		h.meta.Progress <- 1.0
+		props.Files.Write("/index.html", []byte(html))
 		h.meta.Messages <- " 🎉 compiled html file with success"
-		h.meta.State <- api.DONE
-		return nil
+		h.meta.Done <- true
+	}
+
+	writeHtml()
+Main:
+	for {
+		select {
+		case <-h.meta.Close:
+			break Main
+
+		case <-h.meta.Refresh:
+			writeHtml()
+		}
 	}
 }

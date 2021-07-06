@@ -1,7 +1,6 @@
 package web
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -50,8 +49,7 @@ func NewBundler() *Bundler {
 			Splitting:         true,
 			Write:             false,
 			ChunkNames:        "[name].[hash]",
-			AssetNames:        "assets/[name].[hash]",
-			GlobalName:        "Primal",
+			AssetNames:        "[name].[hash]",
 			Outdir:            path,
 			Define:            Definition,
 			Loader:            LoadableExtensions,
@@ -80,6 +78,7 @@ func (bundler *Bundler) WithDevelopMode() *Bundler {
 	return bundler
 }
 
+// TODO: Fix root to start from ./template
 func (bundler *Bundler) Target(name string) *Bundler {
 	clientEntry := `
 		import createApp from "@primal/web/client"
@@ -117,72 +116,67 @@ func (bundler *Bundler) Target(name string) *Bundler {
 	return bundler
 }
 
-func (bundler *Bundler) Apply(ctx context.Context, opts api.OperatorOptions) error {
-	bundler.meta.State <- api.WORKING
+func (bundler *Bundler) Apply(props api.OperatorProps, opts api.OperatorOptions) {
+	defer fmt.Println("Blundler Closed")
 
-	select {
-	case <-ctx.Done():
-		return nil
-	default:
+	if opts.Watch {
+		bundler.options.Watch = &esbuild.WatchMode{
+			OnRebuild: func(result esbuild.BuildResult) {
 
-		if opts.Watch {
-			bundler.options.Watch = &esbuild.WatchMode{
-				OnRebuild: func(result esbuild.BuildResult) {
-					if len(result.Errors) > 0 {
-						fmt.Printf("watch build failed: %d errors\n", len(result.Errors))
-					} else {
-						fmt.Printf("watch build succeeded: %d warnings\n", len(result.Warnings))
-					}
-				},
-			}
+				// notify primal about the change
+				bundler.meta.Updated <- true
+
+				if len(result.Errors) > 0 {
+					fmt.Printf("watch build failed: %d errors\n", len(result.Errors))
+				} else {
+					fmt.Printf("watch build succeeded: %d warnings\n", len(result.Warnings))
+				}
+
+				// bundler.meta.Updated <- true
+				// bundler.meta.Done <- true
+			},
+		}
+	}
+
+	r := esbuild.Build(bundler.options)
+
+	errs := r.Errors
+
+	if len(errs) != 0 {
+		bundler.meta.Messages <- "failed with errors"
+		for _, err := range errs {
+			bundler.meta.Messages <- err.Text
+		}
+	} else {
+		bundler.meta.Messages <- "compiled for platform web with success"
+	}
+
+	for _, out := range r.OutputFiles {
+		outFile := strings.TrimPrefix(out.Path, opts.Root)
+
+		switch bundler.mode {
+		case "server":
+			outFile = strings.Replace(outFile, "stdin", "entry-server", -1)
+		default:
+			outFile = strings.Replace(outFile, "stdin", "entry-client", -1)
 		}
 
-		r := esbuild.Build(bundler.options)
-		errs := r.Errors
-
-		if len(errs) != 0 {
-			bundler.meta.Messages <- "failed with errors"
-			for _, err := range errs {
-				bundler.meta.Messages <- err.Text
-			}
-		} else {
-			bundler.meta.Messages <- "compiled for platform web with success"
-		}
-
-		total := float32(len(r.OutputFiles))
-		count := float32(1.0)
-
-		for _, out := range r.OutputFiles {
-			outFile := strings.TrimPrefix(out.Path, opts.Root)
-
-			switch bundler.mode {
-			case "server":
-				outFile = strings.Replace(outFile, "stdin", "server", -1)
-			default:
-				outFile = strings.Replace(outFile, "stdin", "client", -1)
-			}
-			// outFile = strings.ToLower(outFile)
-
-			err := opts.Files.Write(outFile, out.Contents)
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			bundler.meta.Progress <- count / total
-			count = count + 1.0
-		}
-
-		err := opts.Files.Write("/meta.json", []byte(r.Metafile))
-
+		err := props.Files.Write(outFile, out.Contents)
 		if err != nil {
 			fmt.Println(err)
 		}
-
-		bundler.meta.State <- api.DONE
-		r.Stop()
-
-		return nil
 	}
+
+	err := props.Files.Write("/meta.json", []byte(r.Metafile))
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	bundler.meta.Done <- true
+
+	<-bundler.meta.Close
+	r.Stop()
 }
 
 func (b *Bundler) Meta() api.Metadata {
