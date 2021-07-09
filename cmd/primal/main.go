@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"inspr.dev/primal/pkg/filesystem"
-	fs "inspr.dev/primal/pkg/filesystem"
 	"inspr.dev/primal/pkg/operator/disk"
 	"inspr.dev/primal/pkg/operator/logger"
 	"inspr.dev/primal/pkg/operator/server"
@@ -19,7 +18,7 @@ import (
 
 type OperatorProps struct {
 	Context context.Context
-	Files   fs.FileSystem
+	Files   filesystem.FileSystem
 }
 
 type OperatorOptions struct {
