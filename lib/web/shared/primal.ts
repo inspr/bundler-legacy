@@ -1,12 +1,12 @@
+import type { createElement } from 'react'
 //@ts-ignore
-import {jsx, jsxs} from 'react/jsx-runtime'
-import type {createElement} from 'react'
+import { jsx, jsxs } from 'react/jsx-runtime'
 
-type JSXOldSignature = typeof createElement
+type JSXClassicSignature = typeof createElement
 
 // implement a fix for react jsx new format as defined by react 17
 // the order of the elements is different there and the key is external
-const pjsx: JSXOldSignature = (type: any, props: any, ...children: any) => {
+const pjsx: JSXClassicSignature = (type: any, props: any, ...children: any) => {
     if (typeof props === "undefined" ||  !props) {
         props = {}
 	}
