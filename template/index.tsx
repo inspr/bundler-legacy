@@ -7,10 +7,32 @@ import {
     View,
     ViewStyle,
 } from '@primal/primitives'
-import { cache, createState, map, state } from '@primal/state'
+import { cache, compose, createState, state } from '@primal/state'
 import { cloneElement, FunctionComponent, StrictMode } from 'react'
 import bg from './bg.png'
 import logo from './logo.png'
+import { createGeoLocationTracker, createMouseTracker } from './state'
+
+interface Task {
+    description: string
+}
+
+const myList = cache(createState<Task[]>([]), 'listChico')
+
+const addToList = (description: string) => {
+    const newList = myList.unwrap()!
+    newList.push({ description })
+    myList.publish(newList)
+}
+
+addToList(`Works ${Math.random()}`)
+
+const mouseTracker = cache(createMouseTracker(), 'mousepos')
+mouseTracker.subscribe(console.log)
+
+const geoTracker = createGeoLocationTracker()
+
+geoTracker.subscribe(console.log)
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -31,7 +53,7 @@ if ('serviceWorker' in navigator) {
 }
 
 const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-const dark = cache(createState({ dark: darkModeMediaQuery.matches }), 'isDark')
+const dark = createState({ dark: darkModeMediaQuery.matches })
 
 darkModeMediaQuery.addListener((e) => {
     const darkModeOn = e.matches
@@ -40,8 +62,18 @@ darkModeMediaQuery.addListener((e) => {
     console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
 })
 
-const title = map(
-    dark,
+mouseTracker.subscribe(({ x, y }) => {
+    if (x >= 200 && y >= 200) {
+        if (x <= 400 && y <= 400) {
+            dark.publish({ dark: true })
+            return
+        }
+    }
+    dark.publish({ dark: false })
+})
+
+const title = compose(
+    [dark],
     ({ dark: darkIsOn }) => `Primal | Mode is ${darkIsOn ? 'dark' : 'light'}`
 )
 
@@ -109,9 +141,9 @@ const Header = (props: HeaderProps) => (
     </View>
 )
 
-const Background = () => (
-    <Image source={bg} style={{ width: '50vw', height: '100vh' }} />
-)
+const Background = () => {
+    return <Image source={bg} style={{ width: '50vw', height: '100vh' }} />
+}
 
 const BgView = state(
     style(Center, ({ dark }: DarkProps) => ({
