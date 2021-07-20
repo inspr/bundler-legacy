@@ -2,7 +2,6 @@ package filesystem
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	"github.com/olekukonko/tablewriter"
@@ -32,12 +31,18 @@ func (mfs *MemoryFs) Write(path string, data []byte) error {
 	_, ok := mfs.store[path]
 
 	if ok {
-		return errors.New("file already exists in memory")
+		// return errors.New("file already exists in memory")
 	}
 
 	mfs.store[path] = data
 
 	return nil
+}
+
+func (mfs *MemoryFs) Clean() {
+	for k := range mfs.store {
+		delete(mfs.store, k)
+	}
 }
 
 func (mfs *MemoryFs) List() []string {

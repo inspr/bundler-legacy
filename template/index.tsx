@@ -28,7 +28,7 @@ const addToList = (description: string) => {
 addToList(`Works ${Math.random()}`)
 
 const mouseTracker = cache(createMouseTracker(), 'mousepos')
-mouseTracker.subscribe(console.log)
+// mouseTracker.subscribe(console.log)
 
 const geoTracker = createGeoLocationTracker()
 
@@ -154,7 +154,7 @@ const BgView = state(
         padding: 80,
         width: '50vw',
 
-        backgroundColor: dark ? 'black' : 'white',
+        backgroundColor: dark ? 'black' : 'pink',
     })),
     dark
 )
@@ -189,7 +189,9 @@ const Title = state(
 const Hero = () => (
     <HStack>
         <BgView>
-            <Title>Product Development, Simplified</Title>
+            <Title>
+                Product Development, Simplified, Andrey, Chico, Grecco
+            </Title>
         </BgView>
         <Background />
     </HStack>
@@ -206,6 +208,20 @@ const Root = () => (
         </ZStack>
     </StrictMode>
 )
+
+// Create WebSocket connection.
+const socket = new WebSocket('ws://localhost:3049/ws')
+
+// Connection opened
+socket.addEventListener('open', function (event) {
+    socket.send('Hello Server!')
+})
+
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', event.data)
+    location.reload()
+})
 
 import('./test').then(({ works }) => {
     console.log('works: ', works)

@@ -1,4 +1,4 @@
-package vm
+package operator
 
 import (
 	"fmt"

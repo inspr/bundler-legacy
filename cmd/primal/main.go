@@ -1,74 +1,133 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"os"
-	"path/filepath"
-	"sync"
+	"os/signal"
+	"strings"
+	"syscall"
 
+	esbuild "github.com/evanw/esbuild/pkg/api"
 	"inspr.dev/primal/pkg/filesystem"
-	"inspr.dev/primal/pkg/operator/disk"
-	"inspr.dev/primal/pkg/operator/logger"
-	"inspr.dev/primal/pkg/operator/server"
-	"inspr.dev/primal/pkg/operator/static"
-	"inspr.dev/primal/pkg/platform/web"
 )
 
-type OperatorProps struct {
-	Context context.Context
-	Files   filesystem.FileSystem
+type Operator func(fs filesystem.FileSystem)
+
+type Primal struct {
+	operators []Operator
 }
 
-type OperatorOptions struct {
-	Root string
-
-	Watch bool
-
-	// Environment variables
-	Enviroment map[string]string
+func (p *Primal) Add(op ...Operator) {
+	p.operators = append(p.operators, op...)
 }
 
-type Node struct {
-	// Refresh chan bool
-	// Ready   chan bool
-	ID      string
-	Depends []*Node
-
-	Run     func(props OperatorProps, opts OperatorOptions)
-	isRoot  bool
-	Visited bool
+var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
+var Definition = map[string]string{"__WEB__": "true"}
+var LoadableExtensions = map[string]esbuild.Loader{
+	".css": esbuild.LoaderCSS,
+	".png": esbuild.LoaderFile,
+	".svg": esbuild.LoaderText,
 }
 
-// func (w *Node) Next() []Node {
-// 	return w.Child
-// }
-
-func Traverse(tree *Node, wg *sync.WaitGroup, op func(*Node)) {
-	if wg == nil {
-		wg = &sync.WaitGroup{}
+func AddPlatformExtensions(platform string, baseExt []string) []string {
+	ext := []string{}
+	for _, extension := range baseExt {
+		ext = append(ext, strings.Join([]string{"." + platform, extension}, ""))
 	}
 
-	if tree.isRoot {
-		wg.Add(1)
-		defer wg.Wait()
-	}
+	ext = append(ext, baseExt...)
+	return ext
+}
 
-	op(tree)
+func writeResultsToFs(r esbuild.BuildResult, path string, fs filesystem.FileSystem) {
+	for _, out := range r.OutputFiles {
+		outFile := strings.TrimPrefix(out.Path, path)
+		outFile = strings.Replace(outFile, "stdin", "entry-client", -1)
 
-	for _, subtree := range tree.Depends {
-		if !subtree.Visited {
-			wg.Add(1)
-			subtree.Visited = true
-			go Traverse(subtree, wg, op)
+		err := fs.Write(outFile, out.Contents)
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
-
-	wg.Done()
 }
 
-var htmlTmpl = `
+func (p *Primal) Run(fs filesystem.FileSystem) {
+	path, _ := os.Getwd()
+
+	clientEntry := fmt.Sprintf(`
+	import createApp from "@primal/web/client"
+	import Root from "%s"
+	createApp(Root)
+	`, "./template")
+
+	options := esbuild.BuildOptions{
+		Bundle:            true,
+		Incremental:       true,
+		Metafile:          true,
+		Splitting:         true,
+		Write:             false,
+		ChunkNames:        "[name].[hash]",
+		AssetNames:        "[name].[hash]",
+		Outdir:            path,
+		Define:            Definition,
+		Loader:            LoadableExtensions,
+		Platform:          esbuild.PlatformBrowser,
+		Target:            esbuild.ES2015,
+		LogLevel:          esbuild.LogLevelSilent,
+		Sourcemap:         esbuild.SourceMapExternal,
+		LegalComments:     esbuild.LegalCommentsExternal,
+		Format:            esbuild.FormatESModule,
+		PublicPath:        "/",
+		JSXFactory:        "__jsx",
+		ResolveExtensions: AddPlatformExtensions("web", Extensions),
+		Stdin: &esbuild.StdinOptions{
+			Contents:   clientEntry,
+			ResolveDir: path,
+			Sourcefile: "client.js",
+			Loader:     esbuild.LoaderTSX,
+		},
+		// Watch: &esbuild.WatchMode{
+		// 	OnRebuild: func(r esbuild.BuildResult) {
+		// 		if len(r.Errors) > 0 {
+		// 			fmt.Printf("watch build failed: %d errors\n", len(r.Errors))
+		// 		} else {
+		// 			fmt.Printf("watch build succeeded: %d warnings\n", len(r.Warnings))
+		// 		}
+
+		// 		fs.Clean()
+
+		// 		writeResultsToFs(r, path, fs)
+		// 		for _, op := range p.operators {
+		// 			op(fs)
+		// 		}
+		// 	},
+		// },
+	}
+
+	options.MinifySyntax = true
+	options.MinifyWhitespace = true
+	options.MinifyIdentifiers = true
+
+	r := esbuild.Build(options)
+	writeResultsToFs(r, path, fs)
+
+	for _, op := range p.operators {
+		op(fs)
+	}
+}
+
+func main() {
+	path, _ := os.Getwd()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	fs := filesystem.NewMemoryFs()
+
+	p := Primal{}
+
+	p.Add(func(fs filesystem.FileSystem) {
+		var htmlTmpl = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,139 +144,34 @@ var htmlTmpl = `
 	<title>Primal</title>
 </head>
 <body>
-<p>Goal</p>
     <div id="root"></div>
 </body>
 <script type="module" src="/entry-client.js" ></script>
-</html>
-`
+</html>`
+		fs.Write("/index.html", []byte(htmlTmpl))
+	})
 
-var ContentTypes = map[string]string{
-	".css": "text/css; charset=UTF-8",
+	p.Add(func(fs filesystem.FileSystem) {
+		path = path + "/__build__"
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			os.Mkdir(path, 0755)
+			os.Mkdir(path+"/assets", 0755)
+		}
 
-	".js":  "application/javascript; charset=UTF-8",
-	".mjs": "application/javascript; charset=UTF-8",
+		for key, file := range fs.Raw() {
+			// TODO: catch the error and return in an "errors" chan
+			f, _ := os.Create(path + key)
+			f.Write(file)
+		}
+	})
 
-	".json":   "application/json; charset=UTF-8",
-	".jsonld": "application/ld+json; charset=UTF-8",
+	p.Add(func(fs filesystem.FileSystem) {
+		fmt.Println(fs)
+	})
 
-	".png":  "image/png",
-	".webp": "image/webp",
-	".jpg":  "image/jpeg",
-	".jpeg": "image/jpeg",
-	".svg":  "image/svg+xml; charset=utf-8",
+	// go Start(fs)
+	p.Run(fs)
 
-	".woff":  "font/woff",
-	".woff2": "font/woff2",
-}
-
-func SetContentType(w http.ResponseWriter, file string) {
-	ext := filepath.Ext(file)
-	w.Header().Add("Content-Type", ContentTypes[ext])
-}
-
-func SetCacheDuration(w http.ResponseWriter, seconds int64) {
-	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
-}
-
-func main() {
-	// Logger := &Node{ID: "Logger", Run: func(props OperatorProps, opts OperatorOptions) {
-	// 	fmt.Println(props.Files)
-	// }}
-
-	// Server := &Node{
-	// 	ID: "Server",
-	// 	Run: func(props OperatorProps, opts OperatorOptions) {
-	// 		go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
-	// 			var file []byte
-	// 			var err error
-
-	// 			path := r.URL.Path[0:]
-
-	// 			switch path {
-	// 			case "/":
-	// 				file, err = props.Files.Get("/index.html")
-	// 			default:
-	// 				file, err = props.Files.Get(path)
-	// 			}
-
-	// 			if err == nil {
-	// 				SetContentType(w, path)
-	// 				SetCacheDuration(w, 31536000)
-	// 				w.Write(file)
-	// 			} else {
-	// 				w.WriteHeader(404)
-	// 			}
-	// 		})
-
-	// 		fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
-	// 		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 3049), nil))
-	// 	}}
-
-	// Disk := &Node{
-	// 	ID: "Disk",
-	// 	Run: func(props OperatorProps, opts OperatorOptions) {
-	// 		path := opts.Root + "/__build__"
-
-	// 		if _, err := os.Stat(opts.Root); os.IsNotExist(err) {
-	// 			os.Mkdir(path, 0755)
-	// 			os.Mkdir(path+"/assets", 0755)
-	// 		}
-
-	// 		for key, file := range props.Files.Raw() {
-	// 			// TODO: catch the error and return in an "errors" chan
-	// 			f, _ := os.Create(path + key)
-	// 			f.Write(file)
-	// 		}
-	// 	}, Depends: []*Node{Logger, Server}}
-
-	// Html := &Node{ID: "Html", Run: func(props OperatorProps, opts OperatorOptions) {
-	// 	props.Files.Write("/index.html", []byte(htmlTmpl))
-	// }, Depends: []*Node{Disk}}
-
-	// Bundler := &Node{
-	// 	ID:      "Bundler",
-	// 	Depends: []*Node{Html},
-	// 	Run: func(props OperatorProps, opts OperatorOptions) {
-	// 		time.Sleep(1 * time.Second)
-	// 	}}
-
-	// Root := &Node{
-	// 	ID:      "Root",
-	// 	Depends: []*Node{Bundler},
-	// 	isRoot:  true,
-	// }
-
-	fs := filesystem.NewMemoryFs()
-	root, _ := os.Getwd()
-
-	// props := OperatorProps{Files: fs}
-	// opts := OperatorOptions{Root: root}
-
-	// Traverse(Root, nil, func(n *Node) {
-	// 	if n.Run != nil {
-	// 		fmt.Println(n.ID)
-	// 		n.Run(props, opts)
-	// 	}
-	// })
-
-	primal := NewCompiler(root, fs)
-
-	BundlerClient := web.NewBundler().WithMinification().Target("client")
-	// BundlerServer := web.NewBundler().WithMinification().Target("server")
-
-	HtmlGen := web.NewHtml()
-	Disk := disk.NewDisk("./__build__")
-	Server := server.NewServer(3049)
-	Logger := logger.NewLogger()
-	Static := static.NewStatic([]string{"./template/sw.js"})
-
-	primal.
-		Add(Static).
-		Add(BundlerClient).
-		Add(HtmlGen).
-		Add(Logger).
-		Add(Disk, Server).
-		Apply()
+	// <-c
+	// os.Exit(1)
 }

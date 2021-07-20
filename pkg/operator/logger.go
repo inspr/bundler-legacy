@@ -1,4 +1,4 @@
-package logger
+package operator
 
 import (
 	"fmt"
@@ -24,11 +24,11 @@ func (h *Logger) Apply(props api.OperatorProps, opts api.OperatorOptions) {
 	}
 
 	log()
-Main:
+MainLoop:
 	for {
 		select {
 		case <-h.meta.Close:
-			break Main
+			break MainLoop
 
 		case <-h.meta.Refresh:
 			log()

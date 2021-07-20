@@ -1,4 +1,4 @@
-package disk
+package operator
 
 import (
 	"fmt"

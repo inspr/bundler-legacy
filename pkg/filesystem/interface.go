@@ -10,4 +10,6 @@ type FileSystem interface {
 	List() []string
 
 	Raw() map[string][]byte
+
+	Clean()
 }
