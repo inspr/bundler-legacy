@@ -10,6 +10,7 @@ import (
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"inspr.dev/primal/pkg/filesystem"
 	op "inspr.dev/primal/pkg/operator"
+	w "inspr.dev/primal/pkg/workflow"
 )
 
 type PrimalOptions struct {
@@ -18,12 +19,8 @@ type PrimalOptions struct {
 }
 
 type Primal struct {
-	operators []op.Operator
-	options   PrimalOptions
-}
-
-func (p *Primal) Add(op ...op.Operator) {
-	p.operators = append(p.operators, op...)
+	workflow w.Workflow
+	options  PrimalOptions
 }
 
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
@@ -115,17 +112,14 @@ func (p *Primal) Run(fs filesystem.FileSystem) {
 
 	r := esbuild.Build(options)
 	writeResultsToFs(r, path, fs)
-
-	for _, op := range p.operators {
-		op.Handler(fs)
-	}
 }
 
 func GracefullShutdown() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	<-c
+	msg := <-c
+	fmt.Println(msg)
 	os.Exit(1)
 }
 
@@ -133,30 +127,52 @@ func main() {
 	path, _ := os.Getwd()
 	fs := filesystem.NewMemoryFs()
 
+	// Create Base operator
+	operator := op.NewOperator(fs, path)
+
+	// Define operators
+	html := operator.NewHtml().Task()
+	disk := operator.NewDisk().Task()
+	logger := operator.NewLogger().Task()
+	// static := op.NewStatic(".", []string{"sw.js"})
+
+	// Apply operators into workflow
+	operators := w.Workflow{
+		Tasks: []*w.Task{
+			&html, &disk, &logger,
+		},
+	}
+
 	// Define Primal with options
 	p := Primal{
 		options: PrimalOptions{
 			root:  path,
-			watch: true,
+			watch: false,
 		},
 	}
 
-	// Define operators
-	html := op.NewHtml()
-	disk := op.NewDisk(path)
-	logger := op.NewLogger()
-	// static := op.NewStatic(".", []string{"sw.js"})
+	// Define Primal main task that start Primal and operators
+	primalMain := w.Task{
+		ID:    "primal-main-task",
+		State: w.IDLE,
+		Run: func(t *w.Task) {
+			p.Run(fs)
+			operators.Run()
 
-	// Apply operators
-	p.Add(html, disk, logger)
+			if p.options.watch {
+				go Start(fs)
 
-	// Start Primal
-	p.Run(fs)
+				GracefullShutdown()
+			}
 
-	// Start dev server
-	if p.options.watch {
-		go Start(fs)
-
-		GracefullShutdown()
+			t.State = w.DONE
+		},
 	}
+
+	p.workflow = w.Workflow{
+		Tasks: []*w.Task{&primalMain},
+	}
+
+	// Start Primal workflow
+	p.workflow.Run()
 }

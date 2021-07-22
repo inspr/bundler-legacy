@@ -3,15 +3,27 @@ package operator
 import (
 	"fmt"
 
-	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/workflow"
 )
 
-type Logger struct{}
-
-func NewLogger() *Logger {
-	return &Logger{}
+type Logger struct {
+	*Operator
 }
 
-func (*Logger) Handler(fs filesystem.FileSystem) {
-	fmt.Println(fs)
+func (op *Operator) NewLogger() *Logger {
+	return &Logger{
+		op,
+	}
+}
+
+func (l *Logger) Task() workflow.Task {
+	return workflow.Task{
+		ID:    "loggerTask",
+		State: workflow.IDLE,
+		Run: func(self *workflow.Task) {
+			fmt.Println(l.fs)
+
+			self.State = workflow.DONE
+		},
+	}
 }
