@@ -141,7 +141,7 @@ func main() {
 	p := Primal{
 		options: PrimalOptions{
 			root:  path,
-			watch: false,
+			watch: true,
 		},
 	}
 
@@ -154,12 +154,13 @@ func main() {
 	// Apply operators
 	p.Add(html, disk, logger)
 
-	// start Primal
+	// Start Primal
+	p.Run(fs)
+
+	// Start dev server
 	if p.options.watch {
 		go Start(fs)
 
 		GracefullShutdown()
-	} else {
-		p.Run(fs)
 	}
 }
