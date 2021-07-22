@@ -131,10 +131,6 @@ func GracefullShutdown() {
 
 func main() {
 	path, _ := os.Getwd()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-
 	fs := filesystem.NewMemoryFs()
 
 	// Define Primal with options
