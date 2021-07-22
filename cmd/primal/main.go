@@ -9,15 +9,20 @@ import (
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"inspr.dev/primal/pkg/filesystem"
+	op "inspr.dev/primal/pkg/operator"
 )
 
-type Operator func(fs filesystem.FileSystem)
-
-type Primal struct {
-	operators []Operator
+type PrimalOptions struct {
+	watch bool
+	root  string
 }
 
-func (p *Primal) Add(op ...Operator) {
+type Primal struct {
+	operators []op.Operator
+	options   PrimalOptions
+}
+
+func (p *Primal) Add(op ...op.Operator) {
 	p.operators = append(p.operators, op...)
 }
 
@@ -112,8 +117,16 @@ func (p *Primal) Run(fs filesystem.FileSystem) {
 	writeResultsToFs(r, path, fs)
 
 	for _, op := range p.operators {
-		op(fs)
+		op.Handler(fs)
 	}
+}
+
+func GracefullShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	<-c
+	os.Exit(1)
 }
 
 func main() {
@@ -124,54 +137,29 @@ func main() {
 
 	fs := filesystem.NewMemoryFs()
 
-	p := Primal{}
+	// Define Primal with options
+	p := Primal{
+		options: PrimalOptions{
+			root:  path,
+			watch: false,
+		},
+	}
 
-	p.Add(func(fs filesystem.FileSystem) {
-		var htmlTmpl = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="white">
-	<meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
-	<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
-	<link rel="preload" href="/entry-client.css" as="style">
-	<link rel="modulepreload" href="/entry-client.js">
-	<link rel="modulepreload" href="/react-dom.RT5KN4QJ.js">
-    <link rel="stylesheet" href="/entry-client.css">
-	<title>Primal</title>
-</head>
-<body>
-    <div id="root"></div>
-</body>
-<script type="module" src="/entry-client.js" ></script>
-</html>`
-		fs.Write("/index.html", []byte(htmlTmpl))
-	})
+	// Define operators
+	html := op.NewHtml()
+	disk := op.NewDisk(path)
+	logger := op.NewLogger()
+	// static := op.NewStatic(".", []string{"sw.js"})
 
-	p.Add(func(fs filesystem.FileSystem) {
-		path = path + "/__build__"
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			os.Mkdir(path, 0755)
-			os.Mkdir(path+"/assets", 0755)
-		}
+	// Apply operators
+	p.Add(html, disk, logger)
 
-		for key, file := range fs.Raw() {
-			// TODO: catch the error and return in an "errors" chan
-			f, _ := os.Create(path + key)
-			f.Write(file)
-		}
-	})
+	// start Primal
+	if p.options.watch {
+		go Start(fs)
 
-	p.Add(func(fs filesystem.FileSystem) {
-		fmt.Println(fs)
-	})
-
-	// go Start(fs)
-	p.Run(fs)
-
-	// <-c
-	// os.Exit(1)
+		GracefullShutdown()
+	} else {
+		p.Run(fs)
+	}
 }

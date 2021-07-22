@@ -1,27 +1,33 @@
 package operator
 
 import (
-	"fmt"
+	"os"
 
-	"rogchap.com/v8go"
+	"inspr.dev/primal/pkg/filesystem"
 )
 
-func Run(file []byte) {
-	iso, _ := v8go.NewIsolate() // creates a new JavaScript VM
-	defer iso.Dispose()
+type VM struct {
+	path string
+	file []byte
+}
 
-	runFn, _ := v8go.NewFunctionTemplate(iso, func(info *v8go.FunctionCallbackInfo) *v8go.Value {
-		html := fmt.Sprintf("%v", info.Args()[0]) // when the JS function is called this Go callback will execute
-		fmt.Println("\n" + html + "\n")
-		return nil // you can return a value back to the JS caller if required
-	})
+func NewVM(path string, file []byte) *VM {
+	return &VM{
+		path,
+		file,
+	}
+}
 
-	global, _ := v8go.NewObjectTemplate(iso) // a template that represents a JS Object
-	global.Set("run", runFn)                 // sets the "print" property of the Object to our function
-	ctx1, _ := v8go.NewContext(iso, global)  // new Context with the global Object set to our object template
+func (vm *VM) Handler(fs filesystem.FileSystem) {
+	path := vm.path + "/__build__"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, 0755)
+		os.Mkdir(path+"/assets", 0755)
+	}
 
-	_, err := ctx1.RunScript(string(file), "stdin.js")
-	if err != nil {
-		fmt.Println(err)
+	for key, file := range fs.Raw() {
+		// TODO: catch the error and return in an "errors" chan
+		f, _ := os.Create(path + key)
+		f.Write(file)
 	}
 }
