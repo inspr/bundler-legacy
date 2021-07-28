@@ -8,6 +8,7 @@ import (
 	"inspr.dev/primal/pkg/filesystem"
 )
 
+// Bundler contains the data necessary for a bundler to run
 type Bundler struct {
 	mode    string
 	outdir  string
@@ -15,6 +16,7 @@ type Bundler struct {
 	options esbuild.BuildOptions
 }
 
+// NewBundler returns a bundler structure with the given configs
 func NewBundler(outdir string, fs filesystem.FileSystem) *Bundler {
 	return &Bundler{
 		mode:   "client",
@@ -44,9 +46,10 @@ func NewBundler(outdir string, fs filesystem.FileSystem) *Bundler {
 	}
 }
 
+// Extensions define the main supported extension types
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
 
-// TODO: Deffinition should be dynamicly setted depending on platform
+// TODO: Definition should be dynamicly setted depending on platform
 var Definition = map[string]string{"__WEB__": "true"}
 var LoadableExtensions = map[string]esbuild.Loader{
 	".css": esbuild.LoaderCSS,
@@ -54,6 +57,8 @@ var LoadableExtensions = map[string]esbuild.Loader{
 	".svg": esbuild.LoaderText,
 }
 
+// TODO: review this method
+// AddPlatformExtensions adds given extentions to support the given platform
 func AddPlatformExtensions(platform string, baseExt []string) []string {
 	ext := []string{}
 	for _, extension := range baseExt {
@@ -64,29 +69,13 @@ func AddPlatformExtensions(platform string, baseExt []string) []string {
 	return ext
 }
 
-func (bundler *Bundler) writeResultsToFs(r esbuild.BuildResult) {
-	for _, out := range r.OutputFiles {
-		outFile := strings.TrimPrefix(out.Path, bundler.outdir)
-
-		switch bundler.mode {
-		case "server":
-			outFile = strings.Replace(outFile, "stdin", "entry-server", -1)
-		default:
-			outFile = strings.Replace(outFile, "stdin", "entry-client", -1)
-		}
-
-		err := bundler.fs.Write(outFile, out.Contents)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-}
-
+// Build builds the files in the filesystem
 func (bundler *Bundler) Build() {
 	r := esbuild.Build(bundler.options)
 	bundler.writeResultsToFs(r)
 }
 
+// Watch runs Bundler in watch mode
 func (bundler *Bundler) Watch() {
 	bundler.options.Watch = &esbuild.WatchMode{
 		OnRebuild: func(r esbuild.BuildResult) {
@@ -105,6 +94,7 @@ func (bundler *Bundler) Watch() {
 	bundler.writeResultsToFs(r)
 }
 
+// WithMinification sets bundler to run with minification options
 func (bundler *Bundler) WithMinification() *Bundler {
 	bundler.options.MinifySyntax = true
 	bundler.options.MinifyWhitespace = true
@@ -112,6 +102,7 @@ func (bundler *Bundler) WithMinification() *Bundler {
 	return bundler
 }
 
+// WithDevelopMode makes bundler run in development mode
 func (bundler *Bundler) WithDevelopMode() *Bundler {
 	bundler.options.Define["process.env.NODE_ENV"] = "\"development\""
 
@@ -119,6 +110,7 @@ func (bundler *Bundler) WithDevelopMode() *Bundler {
 }
 
 // TODO: Fix root to start from ./template
+// Target sets bundler to work in client or server mode
 func (bundler *Bundler) Target(name string) *Bundler {
 	clientEntry := fmt.Sprintf(`
 	import createApp from "@primal/web/client"
@@ -154,4 +146,22 @@ func (bundler *Bundler) Target(name string) *Bundler {
 	}
 
 	return bundler
+}
+
+func (bundler *Bundler) writeResultsToFs(r esbuild.BuildResult) {
+	for _, out := range r.OutputFiles {
+		outFile := strings.TrimPrefix(out.Path, bundler.outdir)
+
+		switch bundler.mode {
+		case "server":
+			outFile = strings.Replace(outFile, "stdin", "entry-server", -1)
+		default:
+			outFile = strings.Replace(outFile, "stdin", "entry-client", -1)
+		}
+
+		err := bundler.fs.Write(outFile, out.Contents)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }

@@ -13,6 +13,7 @@ type Platform api.Platform
 
 type PlatformInterface api.PlatformInterface
 
+// NewPlatform returns a PlatformInterface of the given platform type
 func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (PlatformInterface, error) {
 	operator.NewOperator(options, fs).InitMainOperators()
 

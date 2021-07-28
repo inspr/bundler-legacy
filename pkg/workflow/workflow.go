@@ -4,14 +4,23 @@ import (
 	"fmt"
 )
 
+// Status is an enum for possible Operators run status
+type Status int
+
 const (
 	IDLE Status = 1 << iota
 	RUNNING
 	DONE
 )
 
-type Status int
+// WorkflowInterface defines methods to manage and run a workflow
+type WorkflowInterface interface {
+	Add(Task)
+	Remove(Task)
+	Run()
+}
 
+// Task defines an operator's execution methods and its needed data
 type Task struct {
 	ID     string
 	Before func()
@@ -25,33 +34,16 @@ type Task struct {
 }
 
 // Workflow is a set of tasks with a predefined order of execution
-type WorkflowInterface interface {
-	Add(Task)
-	Remove(Task)
-
-	Run()
-}
-
 type Workflow struct {
-	// WorkflowInterface
-
 	Tasks []*Task
 }
 
+// Add adds a new task in a workflow
 func (w *Workflow) Add(task Task) {
 	w.Tasks = append(w.Tasks, &task)
 }
 
-func allTasksAreDone(tasks []*Task) bool {
-	for _, task := range tasks {
-		if task.State != DONE {
-			return false
-		}
-	}
-
-	return true
-}
-
+// Run execs a workflow's tasks
 func (w *Workflow) Run() {
 	for {
 		if allTasksAreDone(w.Tasks) {
@@ -75,4 +67,14 @@ func (w *Workflow) Run() {
 			}
 		}
 	}
+}
+
+func allTasksAreDone(tasks []*Task) bool {
+	for _, task := range tasks {
+		if task.State != DONE {
+			return false
+		}
+	}
+
+	return true
 }

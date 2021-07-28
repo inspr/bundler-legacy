@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"inspr.dev/primal/pkg/api"
@@ -22,7 +23,11 @@ func main() {
 	}
 
 	// Get platform depending on passsed options to Primal
-	platform := platform.NewPlatform(primal.Options, fs)
+	platform, err := platform.NewPlatform(primal.Options, fs)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	if primal.Options.Watch {
 		platform.Watch()
 	} else {
