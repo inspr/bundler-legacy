@@ -8,6 +8,10 @@ import (
 	"inspr.dev/primal/pkg/operator"
 )
 
+type Platform api.Platform
+
+type PlatformInterface api.PlatformInterface
+
 func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) PlatformInterface {
 	operator.NewOperator(options, fs).InitMainOperators()
 
