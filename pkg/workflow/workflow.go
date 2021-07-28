@@ -38,6 +38,10 @@ type Workflow struct {
 	Tasks []*Task
 }
 
+func (w *Workflow) Add(task Task) {
+	w.Tasks = append(w.Tasks, &task)
+}
+
 func allTasksAreDone(tasks []*Task) bool {
 	for _, task := range tasks {
 		if task.State != DONE {
@@ -52,6 +56,10 @@ func (w *Workflow) Run() {
 	for {
 		if allTasksAreDone(w.Tasks) {
 			fmt.Println("Workflow is done")
+
+			for _, task := range w.Tasks {
+				task.State = IDLE
+			}
 			break
 		}
 
