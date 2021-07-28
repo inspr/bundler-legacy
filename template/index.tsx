@@ -27,30 +27,23 @@ const addToList = (description: string) => {
 
 addToList(`Works ${Math.random()}`)
 
-const mouseTracker = cache(createMouseTracker(), 'mousepos')
-// mouseTracker.subscribe(console.log)
-
-const geoTracker = createGeoLocationTracker()
-
-geoTracker.subscribe(console.log)
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/template/sw.js').then(
-            (registration) => {
-                // Registration was successful
-                console.log(
-                    'ServiceWorker registration successful with scope: ',
-                    registration.scope
-                )
-            },
-            (err) => {
-                // registration failed :(
-                console.log('ServiceWorker registration failed: ', err)
-            }
-        )
-    })
-}
+// if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', () => {
+//         navigator.serviceWorker.register('/template/sw.js').then(
+//             (registration) => {
+//                 // Registration was successful
+//                 console.log(
+//                     'ServiceWorker registration successful with scope: ',
+//                     registration.scope
+//                 )
+//             },
+//             (err) => {
+//                 // registration failed :(
+//                 console.log('ServiceWorker registration failed: ', err)
+//             }
+//         )
+//     })
+// }
 
 const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 const dark = createState({ dark: darkModeMediaQuery.matches })
@@ -60,16 +53,6 @@ darkModeMediaQuery.addListener((e) => {
     dark.publish({ dark: darkModeOn })
     // title.publish(createTitle(darkModeOn))
     console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
-})
-
-mouseTracker.subscribe(({ x, y }) => {
-    if (x >= 200 && y >= 200) {
-        if (x <= 400 && y <= 400) {
-            dark.publish({ dark: true })
-            return
-        }
-    }
-    dark.publish({ dark: false })
 })
 
 const title = compose(
@@ -190,7 +173,7 @@ const Hero = () => (
     <HStack>
         <BgView>
             <Title>
-                Product Development, Simplified, Andrey, Chico, Grecco
+                Banana
             </Title>
         </BgView>
         <Background />
@@ -202,26 +185,27 @@ const Hero = () => (
 
 const Root = () => (
     <StrictMode>
-        <ZStack>
-            <Hero />
-            <Header />
-        </ZStack>
+        {/* <ZStack> */}
+        {/* <Hero /> */}
+        <div>"Hello"</div>
+        {/* <Header /> */}
+        {/* </ZStack> */}
     </StrictMode>
 )
 
 // Create WebSocket connection.
-const socket = new WebSocket('ws://localhost:3049/ws')
+// const socket = new WebSocket('ws://localhost:3049/ws')
 
 // Connection opened
-socket.addEventListener('open', function (event) {
-    socket.send('Hello Server!')
-})
+// socket.addEventListener('open', function (event) {
+//     socket.send('Hello Server!')
+// })
 
-// Listen for messages
-socket.addEventListener('message', function (event) {
-    console.log('Message from server ', event.data)
-    location.reload()
-})
+// // Listen for messages
+// socket.addEventListener('message', function (event) {
+//     console.log('Message from server ', event.data)
+//     location.reload()
+// })
 
 import('./test').then(({ works }) => {
     console.log('works: ', works)

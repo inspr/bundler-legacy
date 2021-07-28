@@ -86,22 +86,22 @@ func (p *Primal) Run(fs filesystem.FileSystem) {
 			Sourcefile: "client.js",
 			Loader:     esbuild.LoaderTSX,
 		},
-		// Watch: &esbuild.WatchMode{
-		// 	OnRebuild: func(r esbuild.BuildResult) {
-		// 		if len(r.Errors) > 0 {
-		// 			fmt.Printf("watch build failed: %d errors\n", len(r.Errors))
-		// 		} else {
-		// 			fmt.Printf("watch build succeeded: %d warnings\n", len(r.Warnings))
-		// 		}
+		Watch: &esbuild.WatchMode{
+			OnRebuild: func(r esbuild.BuildResult) {
+				if len(r.Errors) > 0 {
+					fmt.Printf("watch build failed: %d errors\n", len(r.Errors))
+				} else {
+					fmt.Printf("watch build succeeded: %d warnings\n", len(r.Warnings))
+				}
 
-		// 		fs.Clean()
+				fs.Clean()
 
-		// 		writeResultsToFs(r, path, fs)
-		// 		for _, op := range p.operators {
-		// 			op(fs)
-		// 		}
-		// 	},
-		// },
+				writeResultsToFs(r, path, fs)
+				for _, op := range p.operators {
+					op(fs)
+				}
+			},
+		},
 	}
 
 	options.MinifySyntax = true
@@ -169,9 +169,9 @@ func main() {
 		fmt.Println(fs)
 	})
 
-	// go Start(fs)
+	go Start(fs)
 	p.Run(fs)
 
-	// <-c
-	// os.Exit(1)
+	<-c
+	os.Exit(1)
 }

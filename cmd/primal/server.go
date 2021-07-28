@@ -50,7 +50,7 @@ func EchoServer(ws *websocket.Conn) {
 func Start(files filesystem.FileSystem) {
 	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
 
-	go http.Handle("/ws", websocket.Handler(EchoServer))
+	// go http.Handle("/ws", websocket.Handler(EchoServer))
 
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
@@ -68,7 +68,7 @@ func Start(files filesystem.FileSystem) {
 
 		if err == nil {
 			SetContentType(w, path)
-			SetCacheDuration(w, 31536000)
+			// SetCacheDuration(w, 31536000)
 			w.Write(file)
 		} else {
 			w.WriteHeader(404)
