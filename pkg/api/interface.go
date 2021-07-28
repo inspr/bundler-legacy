@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"inspr.dev/primal/pkg/bundler"
 	"inspr.dev/primal/pkg/filesystem"
 	"inspr.dev/primal/pkg/workflow"
 )
@@ -34,6 +35,7 @@ type Platform struct {
 
 	Options PrimalOptions
 	Fs      filesystem.FileSystem
+	Bundler *bundler.Bundler
 }
 
 type PlatformInterface interface {

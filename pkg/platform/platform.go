@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"inspr.dev/primal/pkg/api"
+	"inspr.dev/primal/pkg/bundler"
 	"inspr.dev/primal/pkg/filesystem"
 	"inspr.dev/primal/pkg/operator"
 )
@@ -16,6 +17,7 @@ func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) PlatformIn
 	operator.NewOperator(options, fs).InitMainOperators()
 
 	platform := &Platform{
+		Bundler: bundler.NewBundler(options.Root, fs),
 		Options: options,
 		Fs:      fs,
 	}
