@@ -18,7 +18,7 @@ func (op *Operator) NewLogger() *Logger {
 
 func (logger *Logger) Task() workflow.Task {
 	return workflow.Task{
-		ID:    "loggerTask",
+		ID:    "html",
 		State: workflow.IDLE,
 		Run: func(self *workflow.Task) {
 			fmt.Println(logger.Fs)

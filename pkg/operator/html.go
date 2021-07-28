@@ -14,7 +14,7 @@ func (op *Operator) NewHtml() *Html {
 
 func (html *Html) Task() workflow.Task {
 	return workflow.Task{
-		ID:    "htmlTask",
+		ID:    "html",
 		State: workflow.IDLE,
 		Run: func(self *workflow.Task) {
 			var htmlTmpl = `

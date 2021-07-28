@@ -13,7 +13,7 @@ type Platform api.Platform
 
 type PlatformInterface api.PlatformInterface
 
-func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) PlatformInterface {
+func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (PlatformInterface, error) {
 	operator.NewOperator(options, fs).InitMainOperators()
 
 	platform := &Platform{
@@ -24,11 +24,11 @@ func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) PlatformIn
 
 	switch options.Platform {
 	case "web":
-		return platform.Web()
+		return platform.Web(), nil
 	case "electron":
-		return platform.Electron()
+		return platform.Electron(), nil
 	default:
-		err := fmt.Sprintf("platform '%s' is not supported.", options.Platform)
-		panic(err)
+		err := fmt.Errorf("platform '%s' is not supported", options.Platform)
+		return nil, err
 	}
 }

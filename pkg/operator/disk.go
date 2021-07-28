@@ -18,7 +18,7 @@ func (op *Operator) NewDisk() *Disk {
 
 func (disk *Disk) Task() workflow.Task {
 	return workflow.Task{
-		ID:    "diskTask",
+		ID:    "disk",
 		State: workflow.IDLE,
 		Run: func(self *workflow.Task) {
 			path := disk.Options.Root + "/__build__"
@@ -28,7 +28,6 @@ func (disk *Disk) Task() workflow.Task {
 			}
 
 			for key, file := range disk.Fs.Raw() {
-				// TODO: catch the error and return in an "errors" chan
 				f, _ := os.Create(path + key)
 				f.Write(file)
 			}
