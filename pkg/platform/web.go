@@ -77,7 +77,7 @@ func (w *Web) Run() {
 		Write:             false,
 		ChunkNames:        "[name].[hash]",
 		AssetNames:        "[name].[hash]",
-		Outdir:            w.options.Root,
+		Outdir:            w.Options.Root,
 		Define:            Definition,
 		Loader:            LoadableExtensions,
 		Platform:          esbuild.PlatformBrowser,
@@ -91,7 +91,7 @@ func (w *Web) Run() {
 		ResolveExtensions: AddPlatformExtensions("web", Extensions),
 		Stdin: &esbuild.StdinOptions{
 			Contents:   clientEntry,
-			ResolveDir: w.options.Root,
+			ResolveDir: w.Options.Root,
 			Sourcefile: "client.js",
 			Loader:     esbuild.LoaderTSX,
 		},
@@ -118,7 +118,7 @@ func (w *Web) Run() {
 	options.MinifyIdentifiers = true
 
 	r := esbuild.Build(options)
-	writeResultsToFs(r, w.options.Root, w.fs)
+	writeResultsToFs(r, w.Options.Root, w.Fs)
 
 	w.workflow.Run()
 }
@@ -147,7 +147,7 @@ func (w *Web) Watch() {
 		Write:             false,
 		ChunkNames:        "[name].[hash]",
 		AssetNames:        "[name].[hash]",
-		Outdir:            w.options.Root,
+		Outdir:            w.Options.Root,
 		Define:            Definition,
 		Loader:            LoadableExtensions,
 		Platform:          esbuild.PlatformBrowser,
@@ -161,7 +161,7 @@ func (w *Web) Watch() {
 		ResolveExtensions: AddPlatformExtensions("web", Extensions),
 		Stdin: &esbuild.StdinOptions{
 			Contents:   clientEntry,
-			ResolveDir: w.options.Root,
+			ResolveDir: w.Options.Root,
 			Sourcefile: "client.js",
 			Loader:     esbuild.LoaderTSX,
 		},
@@ -173,9 +173,9 @@ func (w *Web) Watch() {
 					fmt.Printf("watch build succeeded: %d warnings\n", len(r.Warnings))
 				}
 
-				w.fs.Clean()
+				w.Fs.Clean()
 
-				writeResultsToFs(r, w.options.Root, w.fs)
+				writeResultsToFs(r, w.Options.Root, w.Fs)
 
 				w.workflow.Run()
 			},
@@ -187,10 +187,10 @@ func (w *Web) Watch() {
 	options.MinifyIdentifiers = true
 
 	r := esbuild.Build(options)
-	writeResultsToFs(r, w.options.Root, w.fs)
+	writeResultsToFs(r, w.Options.Root, w.Fs)
 
 	w.workflow.Run()
 
-	go Start(w.fs)
+	go Start(w.Fs)
 	GracefullShutdown()
 }

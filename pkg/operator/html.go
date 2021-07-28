@@ -39,7 +39,7 @@ func (html *Html) Task() workflow.Task {
 			<script type="module" src="/entry-client.js" ></script>
 			</html>`
 
-			html.fs.Write("/index.html", []byte(htmlTmpl))
+			html.Fs.Write("/index.html", []byte(htmlTmpl))
 
 			self.State = workflow.DONE
 		},

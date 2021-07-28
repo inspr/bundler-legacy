@@ -1,20 +1,9 @@
 package platform
 
-import "inspr.dev/primal/pkg/filesystem"
+import (
+	"inspr.dev/primal/pkg/api"
+)
 
-type Platform struct {
-	PlatformInterface
+type Platform api.Platform
 
-	fs      filesystem.FileSystem
-	options PlatformOptions
-}
-
-type PlatformInterface interface {
-	Run()
-	Watch()
-}
-
-type PlatformOptions struct {
-	Platform string
-	Root     string
-}
+type PlatformInterface api.PlatformInterface

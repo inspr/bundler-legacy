@@ -3,31 +3,25 @@ package operator
 import (
 	"context"
 
+	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/filesystem"
-	"inspr.dev/primal/pkg/workflow"
 )
 
-type OperatorInterface interface {
-	Task() workflow.Task
-}
+type Operator api.Operator
 
-type Operator struct {
-	ctx  context.Context
-	fs   filesystem.FileSystem
-	root string
-}
-
-func NewOperator(fs filesystem.FileSystem, root string) *Operator {
-	return &Operator{
-		ctx:  context.Background(),
-		fs:   fs,
-		root: root,
-	}
-}
+type OperatorInterface api.OperatorInterface
 
 type MainOperators map[string]OperatorInterface
 
 var MainOps MainOperators
+
+func NewOperator(options api.PrimalOptions, fs filesystem.FileSystem) *Operator {
+	return &Operator{
+		Ctx:     context.Background(),
+		Fs:      fs,
+		Options: options,
+	}
+}
 
 func (op *Operator) InitMainOperators() {
 	MainOps = map[string]OperatorInterface{

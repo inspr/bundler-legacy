@@ -3,27 +3,40 @@ package api
 import (
 	"context"
 
-	fs "inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/workflow"
 )
 
-type OperatorProps struct {
-	Context context.Context
-	Files   fs.FileSystem
+type PrimalOptions struct {
+	Root     string
+	Platform string
+	Watch    bool
 }
 
-type OperatorOptions struct {
-	Root string
-
-	Watch bool
-
-	// Environment variables
-	Enviroment map[string]string
+type Primal struct {
+	Workflow workflow.Workflow // TODO: not used now
+	Options  PrimalOptions
 }
 
-// Operator defines a chain of actions to be executed by Primal.
-// Think about an operator as a step.
-// Primal will look an operator, execute and then call the operators defined by its next func
-type Operator interface {
-	Apply(props OperatorProps, opts OperatorOptions)
-	Meta() Metadata
+type Operator struct {
+	Options PrimalOptions
+
+	Ctx context.Context
+	Fs  filesystem.FileSystem
+}
+
+type OperatorInterface interface {
+	Task() workflow.Task
+}
+
+type Platform struct {
+	PlatformInterface
+
+	Options PrimalOptions
+	Fs      filesystem.FileSystem
+}
+
+type PlatformInterface interface {
+	Run()
+	Watch()
 }

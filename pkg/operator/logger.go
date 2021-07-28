@@ -16,12 +16,12 @@ func (op *Operator) NewLogger() *Logger {
 	}
 }
 
-func (l *Logger) Task() workflow.Task {
+func (logger *Logger) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "loggerTask",
 		State: workflow.IDLE,
 		Run: func(self *workflow.Task) {
-			fmt.Println(l.fs)
+			fmt.Println(logger.Fs)
 
 			self.State = workflow.DONE
 		},
