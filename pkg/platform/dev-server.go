@@ -8,11 +8,14 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
-	"time"
 
 	"golang.org/x/net/websocket"
 	"inspr.dev/primal/pkg/filesystem"
 )
+
+type Server struct {
+	reload (chan bool)
+}
 
 // ContentTypes defines the supported file content types
 var ContentTypes = map[string]string{
@@ -46,16 +49,17 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 }
 
 // EchoServer echos the data received on the WebSocket
-func EchoServer(ws *websocket.Conn) {
+func (s *Server) EchoServer(ws *websocket.Conn) {
 	for {
-		<-time.After(1000 * time.Millisecond)
-		ws.Write([]byte("sdss"))
+		<-(s.reload)
+		ws.Write([]byte("some message"))
 	}
 }
 
 // Start runs the dev server with the given filesystem in localhost:3049
-func Start(files filesystem.FileSystem) {
-	// go http.Handle("/ws", websocket.Handler(EchoServer))
+func (s *Server) Start(files filesystem.FileSystem) {
+	// ! needs to be implemeted with gorrila (maybe) so it works
+	// go http.Handle("/ws", websocket.Handler(s.EchoServer))
 
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var file []byte

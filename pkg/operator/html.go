@@ -32,7 +32,7 @@ func (html *Html) Task() workflow.Task {
 				<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
 				<link rel="preload" href="/entry-client.css" as="style">
 				<link rel="modulepreload" href="/entry-client.js">
-				<link rel="modulepreload" href="/react-dom.RT5KN4QJ.js">
+				<link rel="modulepreload" href="/react-dom.WPNHM4JB.js">
 				<link rel="stylesheet" href="/entry-client.css">
 				<title>Primal</title>
 			</head>

@@ -37,6 +37,10 @@ func (w *Web) Watch() {
 	w.Bundler.Target("client").Watch()
 	w.workflow.Run()
 
-	go Start(w.Fs)
+	server := Server{
+		reload: w.Bundler.Refresh(),
+	}
+
+	go server.Start(w.Fs)
 	GracefullShutdown()
 }

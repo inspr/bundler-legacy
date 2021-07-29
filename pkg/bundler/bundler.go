@@ -14,14 +14,16 @@ type Bundler struct {
 	outdir  string
 	fs      filesystem.FileSystem
 	options esbuild.BuildOptions
+	refresh chan bool
 }
 
 // NewBundler returns a bundler structure with the given configs
 func NewBundler(outdir string, fs filesystem.FileSystem) *Bundler {
 	return &Bundler{
-		mode:   "client",
-		outdir: outdir,
-		fs:     fs,
+		refresh: make(chan bool, 1000),
+		mode:    "client",
+		outdir:  outdir,
+		fs:      fs,
 		options: esbuild.BuildOptions{
 			Bundle:            true,
 			Incremental:       true,
@@ -57,6 +59,10 @@ var LoadableExtensions = map[string]esbuild.Loader{
 	".svg": esbuild.LoaderText,
 }
 
+func (bundler *Bundler) Refresh() chan bool {
+	return bundler.refresh
+}
+
 // TODO: review this method
 // AddPlatformExtensions adds given extentions to support the given platform
 func AddPlatformExtensions(platform string, baseExt []string) []string {
@@ -79,6 +85,7 @@ func (bundler *Bundler) Build() {
 func (bundler *Bundler) Watch() {
 	bundler.options.Watch = &esbuild.WatchMode{
 		OnRebuild: func(r esbuild.BuildResult) {
+			fmt.Println("REBUILDING")
 			if len(r.Errors) > 0 {
 				fmt.Printf("watch build failed: %d errors\n", len(r.Errors))
 			} else {
@@ -86,6 +93,7 @@ func (bundler *Bundler) Watch() {
 			}
 
 			bundler.writeResultsToFs(r)
+			bundler.refresh <- true
 		},
 	}
 
