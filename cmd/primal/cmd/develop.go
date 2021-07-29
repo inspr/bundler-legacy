@@ -5,6 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"inspr.dev/primal/pkg/api"
+	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/platform"
 )
 
 // developCmd implements primal develop command
@@ -32,21 +35,40 @@ func init() {
 }
 
 func runDevelop(args []string) {
+	platformType := args[0]
 	if inputPath == "" {
 		inputPath = defaultPath
 	}
 	if isYaml(inputPath) && validFile(inputPath) {
+		var primal api.Primal
+		fs := filesystem.NewMemoryFs()
 
-		switch args[0] {
-		case "web":
-			fmt.Print("develop mode on ", args[0], " in ", inputPath, "\n")
-			readFile()
-		case "electron":
-			fmt.Print("develop mode on ", args[0], " in ", inputPath, "\n")
-			readFile()
+		opts, err := getConfigs(inputPath)
+		if err != nil {
+			fmt.Printf("failed to get configs from file: %v\n", err)
+			return
+		}
+
+		primal.Options = opts
+		primal.Options.Watch = true
+
+		switch platformType {
+		case api.PlatformWeb:
+			primal.Options.Platform = api.PlatformWeb
+		case api.PlatformElectron:
+			primal.Options.Platform = api.PlatformElectron
 		default:
 			fmt.Printf("platform %s not supported\n", args[0])
+			return
 		}
+
+		platform, err := platform.NewPlatform(primal.Options, fs)
+		if err != nil {
+			fmt.Printf("failed to create platform: %v\n", err)
+		}
+
+		fmt.Printf("running platform %s in development mode!\n", platformType)
+		platform.Watch()
 		return
 	}
 	fmt.Print("yaml file not found for path ", inputPath, "\n")

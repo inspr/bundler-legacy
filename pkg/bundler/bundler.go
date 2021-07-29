@@ -85,7 +85,6 @@ func (bundler *Bundler) Build() {
 func (bundler *Bundler) Watch() {
 	bundler.options.Watch = &esbuild.WatchMode{
 		OnRebuild: func(r esbuild.BuildResult) {
-			fmt.Println("REBUILDING")
 			if len(r.Errors) > 0 {
 				fmt.Printf("watch build failed: %d errors\n", len(r.Errors))
 			} else {
