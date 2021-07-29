@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"golang.org/x/net/websocket"
 	"inspr.dev/primal/pkg/filesystem"
 )
 
+// ContentTypes defines the supported file content types
 var ContentTypes = map[string]string{
 	".css": "text/css; charset=UTF-8",
 
@@ -30,16 +34,18 @@ var ContentTypes = map[string]string{
 	".woff2": "font/woff2",
 }
 
+// SetContentType adds the given file's content type to the header
 func SetContentType(w http.ResponseWriter, file string) {
 	ext := filepath.Ext(file)
 	w.Header().Add("Content-Type", ContentTypes[ext])
 }
 
+// SetCacheDuration adds Cache-Control header with the given amount of seconds
 func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
 
-// Echo the data received on the WebSocket.
+// EchoServer echos the data received on the WebSocket
 func EchoServer(ws *websocket.Conn) {
 	for {
 		<-time.After(1000 * time.Millisecond)
@@ -47,13 +53,11 @@ func EchoServer(ws *websocket.Conn) {
 	}
 }
 
+// Start runs the dev server with the given filesystem in localhost:3049
 func Start(files filesystem.FileSystem) {
-	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
-
-	go http.Handle("/ws", websocket.Handler(EchoServer))
+	// go http.Handle("/ws", websocket.Handler(EchoServer))
 
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
 		var file []byte
 		var err error
 
@@ -68,12 +72,23 @@ func Start(files filesystem.FileSystem) {
 
 		if err == nil {
 			SetContentType(w, path)
-			SetCacheDuration(w, 31536000)
+			// SetCacheDuration(w, 31536000)
 			w.Write(file)
 		} else {
 			w.WriteHeader(404)
 		}
 	})
 
+	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
+
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 3049), nil))
+}
+
+// GracefullShutdown gracefully shuts down the platform bein executed
+func GracefullShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	<-c
+	os.Exit(1)
 }

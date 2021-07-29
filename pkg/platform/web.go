@@ -1,10 +1,7 @@
 package platform
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
-
+	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/operator"
 	"inspr.dev/primal/pkg/workflow"
 )
@@ -17,7 +14,7 @@ type Web struct {
 }
 
 // Web returns a web platform with it's tasks
-func (p *Platform) Web() PlatformInterface {
+func (p *Platform) Web() api.PlatformInterface {
 	web := &Web{
 		Platform: p,
 	}
@@ -42,14 +39,4 @@ func (w *Web) Watch() {
 
 	go Start(w.Fs)
 	GracefullShutdown()
-}
-
-// ! Should this be here?
-// GracefullShutdown
-func GracefullShutdown() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-
-	<-c
-	os.Exit(1)
 }
