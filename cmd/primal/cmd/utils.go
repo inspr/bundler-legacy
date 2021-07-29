@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+	"inspr.dev/primal/pkg/api"
 )
 
 var defaultPath string
@@ -36,12 +36,15 @@ func validFile(filePath string) bool {
 	panic(err)
 }
 
-func readFile() {
-	var test TestYaml
-	yamlFile, err := ioutil.ReadFile(inputPath)
+func getConfigs(path string) (api.PrimalOptions, error) {
+	var config api.PrimalOptions
+
+	bContent, err := ioutil.ReadFile(inputPath)
 	if err != nil {
-		fmt.Println(err)
+		return api.PrimalOptions{}, err
 	}
-	yaml.Unmarshal(yamlFile, &test)
-	fmt.Println(test)
+
+	yaml.Unmarshal(bContent, &config)
+
+	return config, nil
 }
