@@ -2,16 +2,19 @@ package operator
 
 import "inspr.dev/primal/pkg/workflow"
 
+// Html is the html operator
 type Html struct {
 	*Operator
 }
 
+// NewHtml returns a new html operator
 func (op *Operator) NewHtml() *Html {
 	return &Html{
 		op,
 	}
 }
 
+// Task returns a html operator's workflow task
 func (html *Html) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "html",

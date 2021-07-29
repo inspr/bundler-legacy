@@ -7,11 +7,13 @@ import (
 	"rogchap.com/v8go"
 )
 
+// VM defines the vm structure and its fields
 type VM struct {
 	path string
 	file []byte
 }
 
+// NewVM returns a reference to a new VM structure with the given path and file
 func NewVM(path string, file []byte) *VM {
 	return &VM{
 		path,
@@ -19,6 +21,7 @@ func NewVM(path string, file []byte) *VM {
 	}
 }
 
+// Handler handles js code in the given filesystem
 func (vm *VM) Handler(fs filesystem.FileSystem) {
 	iso, _ := v8go.NewIsolate() // creates a new JavaScript VM
 	defer iso.Dispose()

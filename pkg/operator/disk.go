@@ -6,16 +6,19 @@ import (
 	"inspr.dev/primal/pkg/workflow"
 )
 
+// Disk is the logger operator
 type Disk struct {
 	*Operator
 }
 
+// NewDisk returns a new disk operator
 func (op *Operator) NewDisk() *Disk {
 	return &Disk{
 		op,
 	}
 }
 
+// Task returns a disk operator's workflow task
 func (disk *Disk) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "disk",

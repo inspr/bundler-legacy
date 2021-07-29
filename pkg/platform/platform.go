@@ -9,12 +9,12 @@ import (
 	"inspr.dev/primal/pkg/operator"
 )
 
+// Platform is created so it's possible to define methods
+// for the api.Platform struct in this package
 type Platform api.Platform
 
-type PlatformInterface api.PlatformInterface
-
 // NewPlatform returns a PlatformInterface of the given platform type
-func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (PlatformInterface, error) {
+func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (api.PlatformInterface, error) {
 	operator.NewOperator(options, fs).InitMainOperators()
 
 	platform := &Platform{
