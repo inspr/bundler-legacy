@@ -24,9 +24,9 @@ func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (api.Platf
 	}
 
 	switch options.Platform {
-	case "web":
+	case api.PlatformWeb:
 		return platform.Web(), nil
-	case "electron":
+	case api.PlatformElectron:
 		return platform.Electron(), nil
 	default:
 		err := fmt.Errorf("platform '%s' is not supported", options.Platform)

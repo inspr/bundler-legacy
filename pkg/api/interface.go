@@ -48,3 +48,8 @@ type Platform struct {
 	Fs      filesystem.FileSystem
 	Bundler *bundler.Bundler
 }
+
+const (
+	PlatformWeb      = "web"
+	PlatformElectron = "electron"
+)
