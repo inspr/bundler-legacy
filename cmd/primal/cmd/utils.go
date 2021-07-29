@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
@@ -23,6 +24,14 @@ func isYaml() bool {
 		return false
 	}
 	return true
+}
+
+func exists() bool {
+	if _, err := os.Stat(fpath); err == nil {
+		return true
+	} else {
+		return false
+	}
 }
 
 func readFile() {

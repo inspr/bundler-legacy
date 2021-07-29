@@ -40,7 +40,7 @@ func build(args []string) {
 	if fpath == "" {
 		fpath = Path
 	}
-	if isYaml() { //imported from develop.go
+	if isYaml() && exists() { //imported from develop.go
 
 		if args[0] == "electron" {
 			fmt.Print("build file ", fpath, " on ", args[0], "\n")

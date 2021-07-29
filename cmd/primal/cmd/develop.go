@@ -39,7 +39,7 @@ func develop(args []string) {
 	if fpath == "" {
 		fpath = Path
 	}
-	if isYaml() {
+	if isYaml() && exists() {
 
 		if args[0] == "electron" {
 			fmt.Print("develop in watch mode on ", args[0], " in ", fpath, "\n")
@@ -58,5 +58,5 @@ func develop(args []string) {
 		}
 		fmt.Print("unexisting platform\n")
 	}
-	fmt.Print("yaml file not found\n")
+	fmt.Print("yaml file not found for path ", fpath, "\n")
 }
