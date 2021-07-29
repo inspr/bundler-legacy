@@ -6,19 +6,22 @@ import (
 	"inspr.dev/primal/pkg/workflow"
 )
 
+// Logger is the logger operator
 type Logger struct {
 	*Operator
 }
 
+// NewLogger returns a new logger operator
 func (op *Operator) NewLogger() *Logger {
 	return &Logger{
 		op,
 	}
 }
 
+// Task returns a logger operator's workflow task
 func (logger *Logger) Task() workflow.Task {
 	return workflow.Task{
-		ID:    "html",
+		ID:    "logger",
 		State: workflow.IDLE,
 		Run: func(self *workflow.Task) {
 			fmt.Println(logger.Fs)
