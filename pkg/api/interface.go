@@ -3,27 +3,53 @@ package api
 import (
 	"context"
 
-	fs "inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/bundler"
+	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/workflow"
 )
 
-type OperatorProps struct {
-	Context context.Context
-	Files   fs.FileSystem
+// PlatformInterface defines methods that exec a platform
+type PlatformInterface interface {
+	Run()
+	Watch()
 }
 
-type OperatorOptions struct {
-	Root string
-
-	Watch bool
-
-	// Environment variables
-	Enviroment map[string]string
+// OperatorInterface defines methods that returns an operator operation
+type OperatorInterface interface {
+	Task() workflow.Task
 }
 
-// Operator defines a chain of actions to be executed by Primal.
-// Think about an operator as a step.
-// Primal will look an operator, execute and then call the operators defined by its next func
-type Operator interface {
-	Apply(props OperatorProps, opts OperatorOptions)
-	Meta() Metadata
+// PrimalOptions contains the main information needed for Primal to run
+type PrimalOptions struct {
+	Root     string
+	Platform string
+	Watch    bool
 }
+
+// Primal contains PrimalOptions data
+type Primal struct {
+	Workflow workflow.Workflow // TODO: not used now
+	Options  PrimalOptions
+}
+
+// Operator contains the necessary information for an operator to run
+type Operator struct {
+	Options PrimalOptions
+
+	Ctx context.Context
+	Fs  filesystem.FileSystem
+}
+
+// Platform implements how a platform execs and has the needed data for it to run
+type Platform struct {
+	PlatformInterface
+
+	Options PrimalOptions
+	Fs      filesystem.FileSystem
+	Bundler *bundler.Bundler
+}
+
+const (
+	PlatformWeb      = "web"
+	PlatformElectron = "electron"
+)
