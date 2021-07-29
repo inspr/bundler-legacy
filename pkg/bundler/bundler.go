@@ -85,7 +85,6 @@ func (bundler *Bundler) Watch() {
 				fmt.Printf("watch build succeeded: %d warnings\n", len(r.Warnings))
 			}
 
-			bundler.fs.Clean()
 			bundler.writeResultsToFs(r)
 		},
 	}
