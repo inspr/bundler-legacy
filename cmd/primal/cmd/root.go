@@ -12,24 +12,29 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "primal",
+	Use:   "primal [mode] [platform]",
 	Short: "Primal CLI",
-	Long:  `Primal CLI with commands develop and build`,
+	Long:  `A framework for developing web applications`,
+	Example: "primal develop web -f dir/config.yaml\n" +
+		"primal build electron -f dir/config.yaml\n",
 
-	Run: func(cmd *cobra.Command, args []string) { fmt.Println("Hello Primal") },
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("main command of the primal cli, to see the full list of " +
+			"existent subcommands please use 'primal help'")
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() {
+	rootCmd.PersistentFlags().StringP("file", "f", inputPath, "-f path/to/file.yaml")
+
+	rootCmd.AddCommand(developCmd, buildCmd)
+
 	rootCmd.Execute()
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.primal.yaml)")
-
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.

@@ -9,16 +9,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var Path string
-var fpath string
+var defaultPath string
+var inputPath string
 
 type TestYaml struct {
 	Name string `yaml:"name"`
 	Age  int    `yaml:"age"`
 }
 
-func isYaml() bool {
-	end := filepath.Ext(fpath)
+func isYaml(file string) bool {
+	end := filepath.Ext(file)
 	if end != ".yml" && end != ".yaml" {
 
 		return false
@@ -26,17 +26,19 @@ func isYaml() bool {
 	return true
 }
 
-func exists() bool {
-	if _, err := os.Stat(fpath); err == nil {
+func validFile(filePath string) bool {
+	var err error
+	if _, err = os.Stat(filePath); err == nil {
 		return true
-	} else {
+	} else if os.IsNotExist(err) {
 		return false
 	}
+	panic(err)
 }
 
 func readFile() {
 	var test TestYaml
-	yamlFile, err := ioutil.ReadFile(fpath)
+	yamlFile, err := ioutil.ReadFile(inputPath)
 	if err != nil {
 		fmt.Println(err)
 	}

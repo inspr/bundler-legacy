@@ -2,62 +2,52 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-// Path adn f path imported from develop.go
-// buildCmd represents the build command
+// buildCmd implements primal build command
 var buildCmd = &cobra.Command{
-	Use:   "build",
-	Short: "Builds the files and stops.",
-	Long: `Builds the files and stops. Doesn’t run the server. Doesn’t have splitting nor ESModules.
+	Use:   "build [platform]",
+	Short: "Runs Primal in production mode",
+	Long: `Runs Primal in production mode, building and generating production-ready files.
+	The platform can be one of “electron”, “web”`,
+	Example: "primal build electron -f dir/config.yaml",
 
-	Builds entry-server on top of entry-browser.`,
+	Args: cobra.ExactArgs(1),
+
 	Run: func(cmd *cobra.Command, args []string) {
-		fpath, _ = cmd.Flags().GetString("fpath")
-		build(args)
+		inputPath, _ = cmd.Flags().GetString("file")
+		runBuild(args)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(buildCmd)
-
-	// buildCmd.PersistentFlags().String("foo", "", "A help for foo")
-
 	currPath, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 	}
-	Path = currPath + "/config.yml" // ou yml
-
-	buildCmd.Flags().StringP("fpath", "f", Path, "add path")
+	defaultPath = currPath + "/config.yaml"
 }
 
-func build(args []string) {
-	if fpath == "" {
-		fpath = Path
+func runBuild(args []string) {
+	if inputPath == "" {
+		inputPath = defaultPath
 	}
-	if isYaml() && exists() { //imported from develop.go
+	if isYaml(inputPath) && validFile(inputPath) {
 
-		if args[0] == "electron" {
-			fmt.Print("build file ", fpath, " on ", args[0], "\n")
+		switch args[0] {
+		case "web":
+			fmt.Print("build mode on ", args[0], " in ", inputPath, "\n")
 			readFile()
-			return
-		}
-		if args[0] == "web" {
-			fmt.Print("build file ", fpath, " on ", args[0], "\n")
+		case "electron":
+			fmt.Print("build mode on ", args[0], " in ", inputPath, "\n")
 			readFile()
-			return
+		default:
+			fmt.Printf("platform %s not supported\n", args[0])
 		}
-		if args[0] == "native" {
-			fmt.Print("build file ", fpath, " on ", args[0], "\n")
-			readFile()
-			return
-		}
-		fmt.Print("unexisting platform\n")
+		return
 	}
-	fmt.Print("yaml file not found\n")
+	fmt.Print("yaml file not found for path ", inputPath, "\n")
 }

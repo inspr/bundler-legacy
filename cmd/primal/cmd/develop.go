@@ -2,61 +2,52 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-// developCmd represents the develop command
+// developCmd implements primal develop command
 var developCmd = &cobra.Command{
-	Use:   "develop",
-	Short: "Starts the compiler in watch mode",
-	Long: `Starts the compiler in watch mode. It doesn’t minify the code.
-	
-	The platform will be one of “electron”, “native”, “web”`,
+	Use:   "develop [platform]",
+	Short: "Runs Primal in watch mode",
+	Long: `Runs Primal in watch mode, so changes made are automatically applied.
+	The platform can be one of “electron”, “web”`,
+	Example: "primal develop web -f dir/config.yaml",
+
+	Args: cobra.ExactArgs(1),
 
 	Run: func(cmd *cobra.Command, args []string) {
-		fpath, _ = cmd.Flags().GetString("fpath")
-		develop(args)
+		inputPath, _ = cmd.Flags().GetString("file")
+		runDevelop(args)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(developCmd)
-	// developCmd.PersistentFlags().String("foo", "", "A help for foo")
-
 	currPath, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 	}
-	Path = currPath + "/config.yaml" // ou yml
-
-	developCmd.Flags().StringP("fpath", "f", Path, "add path")
+	defaultPath = currPath + "/config.yaml"
 }
 
-func develop(args []string) {
-	if fpath == "" {
-		fpath = Path
+func runDevelop(args []string) {
+	if inputPath == "" {
+		inputPath = defaultPath
 	}
-	if isYaml() && exists() {
+	if isYaml(inputPath) && validFile(inputPath) {
 
-		if args[0] == "electron" {
-			fmt.Print("develop in watch mode on ", args[0], " in ", fpath, "\n")
+		switch args[0] {
+		case "web":
+			fmt.Print("develop mode on ", args[0], " in ", inputPath, "\n")
 			readFile()
-			return
-		}
-		if args[0] == "web" {
-			fmt.Print("develop in watch mode on ", args[0], " in ", fpath, "\n")
+		case "electron":
+			fmt.Print("develop mode on ", args[0], " in ", inputPath, "\n")
 			readFile()
-			return
+		default:
+			fmt.Printf("platform %s not supported\n", args[0])
 		}
-		if args[0] == "native" {
-			fmt.Print("develop in watch mode on ", args[0], " in ", fpath, "\n")
-			readFile()
-			return
-		}
-		fmt.Print("unexisting platform\n")
+		return
 	}
-	fmt.Print("yaml file not found for path ", fpath, "\n")
+	fmt.Print("yaml file not found for path ", inputPath, "\n")
 }
