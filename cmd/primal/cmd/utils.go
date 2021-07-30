@@ -12,11 +12,6 @@ import (
 var defaultPath string
 var inputPath string
 
-type TestYaml struct {
-	Name string `yaml:"name"`
-	Age  int    `yaml:"age"`
-}
-
 func isYaml(file string) bool {
 	end := filepath.Ext(file)
 	if end != ".yml" && end != ".yaml" {

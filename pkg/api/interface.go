@@ -21,7 +21,7 @@ type OperatorInterface interface {
 
 // PrimalOptions contains the main information needed for Primal to run
 type PrimalOptions struct {
-	Root     string
+	Root     string `yaml:"root"`
 	Platform string
 	Watch    bool
 }
