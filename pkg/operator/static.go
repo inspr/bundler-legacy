@@ -37,7 +37,8 @@ func (static *Static) Task() workflow.Task {
 					fmt.Println(err)
 				}
 
-				static.Fs.Write("/"+relativePath, data)
+				filename := path.Base(relativePath)
+				static.Fs.Write("/"+filename, data)
 			}
 
 			self.State = workflow.DONE
