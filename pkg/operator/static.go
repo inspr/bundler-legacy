@@ -3,38 +3,45 @@ package operator
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
+	"path"
 
-	"inspr.dev/primal/pkg/filesystem"
+	"inspr.dev/primal/pkg/workflow"
 )
 
 // Static defines the static file generator structure
 type Static struct {
+	*Operator
 	files []string
-	root  string
 }
 
 // NewStatic returns a reference to a new static file generator structure
 // with the given path and files
-func NewStatic(root string, files []string) *Static {
+func (operator *Operator) NewStatic(files []string) *Static {
 	return &Static{
-		files,
-		root,
+		Operator: operator,
+		files:    files,
 	}
 }
 
-// ! to be implemented
-// Handler
-func (s *Static) Handler(fs filesystem.FileSystem) {
-	for _, path := range fs.List() {
-		newPath := strings.Replace(path, ".", "", 1)
-		// TODO: root
-		data, err := ioutil.ReadFile(s.root + newPath)
+// Task - Static operator handle function
+func (static *Static) Task() workflow.Task {
+	return workflow.Task{
+		ID:    "static",
+		State: workflow.IDLE,
+		Run: func(self *workflow.Task) {
+			for _, relativePath := range static.files {
+				fullPath := path.Join(static.Options.Root, relativePath)
 
-		if err != nil {
-			fmt.Println(err)
-		}
+				data, err := ioutil.ReadFile(fullPath)
+				if err != nil {
+					fmt.Println(err)
+				}
 
-		fs.Write(newPath, data)
+				static.Fs.Write("/"+relativePath, data)
+			}
+
+			self.State = workflow.DONE
+		},
 	}
+
 }
