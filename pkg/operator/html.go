@@ -1,6 +1,8 @@
 package operator
 
-import "inspr.dev/primal/pkg/workflow"
+import (
+	"inspr.dev/primal/pkg/workflow"
+)
 
 // Html is the html operator
 type Html struct {
