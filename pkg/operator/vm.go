@@ -3,10 +3,26 @@ package operator
 import (
 	"fmt"
 
+	"inspr.dev/primal/pkg/filesystem"
 	"rogchap.com/v8go"
 )
 
-func Run(file []byte) {
+// VM defines the vm structure and its fields
+type VM struct {
+	path string
+	file []byte
+}
+
+// NewVM returns a reference to a new VM structure with the given path and file
+func NewVM(path string, file []byte) *VM {
+	return &VM{
+		path,
+		file,
+	}
+}
+
+// Handler handles js code in the given filesystem
+func (vm *VM) Handler(fs filesystem.FileSystem) {
 	iso, _ := v8go.NewIsolate() // creates a new JavaScript VM
 	defer iso.Dispose()
 
@@ -20,7 +36,7 @@ func Run(file []byte) {
 	global.Set("run", runFn)                 // sets the "print" property of the Object to our function
 	ctx1, _ := v8go.NewContext(iso, global)  // new Context with the global Object set to our object template
 
-	_, err := ctx1.RunScript(string(file), "stdin.js")
+	_, err := ctx1.RunScript(string(vm.file), "stdin.js")
 	if err != nil {
 		fmt.Println(err)
 	}

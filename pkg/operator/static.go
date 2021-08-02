@@ -5,51 +5,36 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"inspr.dev/primal/pkg/api"
+	"inspr.dev/primal/pkg/filesystem"
 )
 
+// Static defines the static file generator structure
 type Static struct {
 	files []string
-	meta  api.Metadata
+	root  string
 }
 
-func NewStatic(files []string) *Static {
+// NewStatic returns a reference to a new static file generator structure
+// with the given path and files
+func NewStatic(root string, files []string) *Static {
 	return &Static{
-		files: files,
-		meta:  api.NewMetadata(),
+		files,
+		root,
 	}
 }
 
-func (h *Static) Apply(props api.OperatorProps, opts api.OperatorOptions) {
+// ! to be implemented
+// Handler
+func (s *Static) Handler(fs filesystem.FileSystem) {
+	for _, path := range fs.List() {
+		newPath := strings.Replace(path, ".", "", 1)
+		// TODO: root
+		data, err := ioutil.ReadFile(s.root + newPath)
 
-	var loadFiles = func() {
-		for _, path := range h.files {
-			newPath := strings.Replace(path, ".", "", 1)
-			data, err := ioutil.ReadFile(opts.Root + newPath)
-
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			props.Files.Write(newPath, data)
+		if err != nil {
+			fmt.Println(err)
 		}
-		h.meta.Done <- true
+
+		fs.Write(newPath, data)
 	}
-
-	loadFiles()
-Main:
-	for {
-		select {
-		case <-h.meta.Close:
-			break Main
-
-		case <-h.meta.Refresh:
-			loadFiles()
-		}
-	}
-
-}
-
-func (h *Static) Meta() api.Metadata {
-	return h.meta
 }

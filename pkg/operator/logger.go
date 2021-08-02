@@ -3,39 +3,30 @@ package operator
 import (
 	"fmt"
 
-	"inspr.dev/primal/pkg/api"
+	"inspr.dev/primal/pkg/workflow"
 )
 
+// Logger is the logger operator
 type Logger struct {
-	meta api.Metadata
+	*Operator
 }
 
-func NewLogger() *Logger {
+// NewLogger returns a new logger operator
+func (op *Operator) NewLogger() *Logger {
 	return &Logger{
-		meta: api.NewMetadata(),
+		op,
 	}
 }
 
-func (h *Logger) Apply(props api.OperatorProps, opts api.OperatorOptions) {
+// Task returns a logger operator's workflow task
+func (logger *Logger) Task() workflow.Task {
+	return workflow.Task{
+		ID:    "logger",
+		State: workflow.IDLE,
+		Run: func(self *workflow.Task) {
+			fmt.Println(logger.Fs)
 
-	var log = func() {
-		fmt.Println(props.Files)
-		h.meta.Done <- true
+			self.State = workflow.DONE
+		},
 	}
-
-	log()
-MainLoop:
-	for {
-		select {
-		case <-h.meta.Close:
-			break MainLoop
-
-		case <-h.meta.Refresh:
-			log()
-		}
-	}
-}
-
-func (h *Logger) Meta() api.Metadata {
-	return h.meta
 }
