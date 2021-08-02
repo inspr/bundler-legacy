@@ -134,6 +134,8 @@ func (bundler *Bundler) writeResultsToFs(r esbuild.BuildResult) {
 			outFile = strings.Replace(outFile, "stdin", "entry-client", -1)
 		}
 
+		outFile = "/static" + outFile
+
 		err := bundler.fs.Write(outFile, out.Contents)
 		if err != nil {
 			fmt.Println(err)

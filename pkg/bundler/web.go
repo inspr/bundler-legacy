@@ -29,7 +29,7 @@ func NewWebBundler(outdir string, fs filesystem.FileSystem) *Bundler {
 			Sourcemap:         esbuild.SourceMapExternal,
 			LegalComments:     esbuild.LegalCommentsExternal,
 			Format:            esbuild.FormatESModule,
-			PublicPath:        "/",
+			PublicPath:        "/static/",
 			JSXFactory:        "__jsx",
 			ResolveExtensions: AddPlatformExtensions("web", Extensions),
 		},
