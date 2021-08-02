@@ -18,13 +18,13 @@ func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (api.Platf
 	operator.NewOperator(options, fs).InitMainOperators()
 
 	platform := &Platform{
-		Bundler: bundler.NewBundler(options.Root, fs),
 		Options: options,
 		Fs:      fs,
 	}
 
 	switch options.Platform {
 	case api.PlatformWeb:
+		platform.Bundler = bundler.NewWebBundler(options.Root, fs)
 		return platform.Web(), nil
 	case api.PlatformElectron:
 		return platform.Electron(), nil
