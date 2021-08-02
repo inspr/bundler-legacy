@@ -1,58 +1,14 @@
-package main
+package server
 
 import (
-	"bytes"
-	"fmt"
-	"html/template"
-	"os"
+	"context"
 
-	"github.com/mjibson/go-dsp/fft"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/html"
+	"inspr.dev/primal/lib/web/server/controller"
 )
 
-type Meta struct {
-	Links []string
-}
+func Start(ctx context.Context, port string, path string) {
 
-func main() {
-	f, err := os.ReadFile("./lib/web/server/index.html")
-	if err != nil {
-		panic(err)
-	}
+	server := controller.NewServer(ctx, port)
 
-	meta := Meta{
-		[]string{
-			"teste.js",
-			"teste.js",
-			"teste.js",
-			"teste.js",
-			"teste.js",
-		},
-	}
-
-	tmpl, err := template.New("test").Parse(string(f))
-
-	if err != nil {
-		panic(err)
-	}
-
-	buff := bytes.NewBuffer(nil)
-
-	err = tmpl.Execute(buff, meta)
-	if err != nil {
-		panic(err)
-	}
-
-	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
-
-	b, err := m.Bytes("text/html", buff.Bytes())
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(string(b))
-
-	fmt.Println(fft.FFTReal([]float64{1, 2, 3}))
+	server.Run()
 }
