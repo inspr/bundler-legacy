@@ -31,7 +31,9 @@ func NewOperator(options api.PrimalOptions, fs filesystem.FileSystem) *Operator 
 // InitMainOperators creates the main platform operators and store them on MainOps
 func (op *Operator) InitMainOperators() {
 	MainOps = map[string]api.OperatorInterface{
-		"html":   api.OperatorInterface(op.NewHtml()),
+		"html": api.OperatorInterface(op.NewHtml()),
+		// TODO: create method to add new operators
+		// "static": api.OperatorInterface(op.NewStatic([]string{"template/sw.js"})),
 		"disk":   api.OperatorInterface(op.NewDisk()),
 		"logger": api.OperatorInterface(op.NewLogger()),
 	}

@@ -5,12 +5,7 @@ import { style } from '@primal/primitives'
 import { createState, state } from '@primal/state'
 
 describe('Image', () => {
-    test('it should render the Image', () => {
-        const instance = create(<Image source='' id={'__Image'} />).toJSON()
-        expect(instance).toHaveProperty('props', { id: '__Image' })
-    })
-
-    test('withStyle return a valid component', () => {
+    test('style return a valid component', () => {
         const TestImage = style(Image, {
             backgroundColor: 'red',
         })
@@ -31,15 +26,22 @@ describe('Image', () => {
 
         const activeState = createState<TestImageProps>({
             active: false,
-            double: false
+            double: false,
         })
 
         const ActionableImage = state(Image, activeState)
 
-        const TestImage = style(ActionableImage, ({ active }: TestImageProps) => ({
-            backgroundColor: active ? 'red' : 'blue',
-        }))
-        
+        const instanceWithState = create(<ActionableImage source='' />).toJSON()
+        expect(instanceWithState).toHaveProperty('props', {
+            active: true,
+        })
+        const TestImage = style(
+            ActionableImage,
+            ({ active }: TestImageProps) => ({
+                backgroundColor: active ? 'red' : 'blue',
+            })
+        )
+
         const instance = create(<TestImage source='' />).toJSON()
         expect(instance).toHaveProperty('props', {
             active: true,
