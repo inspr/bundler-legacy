@@ -1,7 +1,7 @@
 package main
 
-import "inspr.dev/primal/cmd/primal/cmd"
+import "inspr.dev/primal/cmd/primal/cli"
 
 func main() {
-	cmd.Execute()
+	cli.Execute()
 }
