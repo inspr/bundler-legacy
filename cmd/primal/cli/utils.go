@@ -48,6 +48,5 @@ func getConfigs(path string) (api.PrimalOptions, error) {
 func getDirPath(path string) string {
 	dir := strings.Split(path, "/")
 	dir = dir[:len(dir)-1]
-	newDir := strings.Join(dir, "/")
-	return newDir
+	return strings.Join(dir, "/")
 }
