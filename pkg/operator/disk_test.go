@@ -48,7 +48,7 @@ func TestDisk_Task(t *testing.T) {
 		Root: root,
 	}).NewDisk()
 
-	testWorkflow := workflow.Workflow{}
+	testWorkflow := workflow.NewWorkflow()
 	testWorkflow.Add(diskOperator.Task())
 
 	tests := []struct {

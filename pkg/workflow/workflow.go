@@ -4,21 +4,21 @@ import (
 	"fmt"
 )
 
-var errChan chan error
-
-func init() {
-	errChan = make(chan error)
+// NewWorkflow return new Workflow struct
+func NewWorkflow() *Workflow {
+	return &Workflow{
+		ErrChan: make(chan error),
+	}
 }
 
 // Add adds a new task in a workflow
 func (w *Workflow) Add(task Task) {
-	task.ErrChan = errChan
+	task.ErrChan = w.ErrChan
 	w.Tasks = append(w.Tasks, &task)
 }
 
 // Run execs a workflow's tasks
 func (w *Workflow) Run() {
-	w.ErrChan = errChan
 Main:
 	for {
 		select {
