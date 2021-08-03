@@ -14,14 +14,16 @@ type Server struct {
 	mux  *http.ServeMux
 	ctx  context.Context
 	port string
+	path string
 }
 
 // NewServer configures the server
-func NewServer(ctx context.Context, port string) *Server {
+func NewServer(ctx context.Context, port, path string) *Server {
 	s := Server{
 		mux:  http.NewServeMux(),
 		ctx:  ctx,
 		port: port,
+		path: path,
 	}
 	s.initRoutes()
 	return &s

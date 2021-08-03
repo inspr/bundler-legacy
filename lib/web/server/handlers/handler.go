@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"inspr.dev/primal/lib/web/server/models"
 )
 
 var logger *log.Logger
@@ -41,51 +39,32 @@ var contentTypes = map[string]string{
 // requests received by the UID Provider API
 type Handler struct {
 	ctx      context.Context
-	DataPath string
+	dataPath string
 }
 
 // Handler is an alias of the api router function
 type HandlerFunc func(w http.ResponseWriter, r *http.Request)
 
 // NewHandler instantiates a new Handler structure
-func NewHandler(ctx context.Context) *Handler {
+func NewHandler(ctx context.Context, path string) *Handler {
 	return &Handler{
-		ctx: ctx,
+		ctx:      ctx,
+		dataPath: path,
 	}
-}
-
-// InitBuildDir handles request that defines the directory which contains the files to be served
-func (h *Handler) InitBuildDir() HandlerFunc {
-	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var data models.ServerDI
-
-		err := json.NewDecoder(r.Body).Decode(&data)
-		if err != nil {
-			response := fmt.Sprintf("error while decoding request body: %v", err)
-			writeResponse(w, http.StatusBadRequest, response)
-			return
-		}
-
-		if validFile(data.Path) {
-			h.DataPath = data.Path
-			return
-		}
-
-		logger.Printf("file %s not found", data.Path)
-		writeResponse(w, http.StatusNotFound, "file not found for given path")
-	})
 }
 
 // ServeFiles serves the files on the directory specified by 'InitBuildDir' handler
 func (h *Handler) ServeFiles() HandlerFunc {
 	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// TODO: if url doesn't contain any extensions, send it to VM
+
 		path := r.URL.Path[0:]
 		if path != "/" {
 			setContentType(w, path)
-			path = h.DataPath + path
+			path = h.dataPath + path
 		} else {
-			path = h.DataPath + "/index.html"
+			path = h.dataPath + "/index.html"
 		}
 
 		http.ServeFile(w, r, path)
