@@ -50,6 +50,8 @@ func runBuild(args []string) {
 		}
 
 		primal.Options = opts
+		inputPath = getDirPath(inputPath)
+		primal.Options.Root = inputPath
 		primal.Options.Watch = false
 
 		switch platformType {

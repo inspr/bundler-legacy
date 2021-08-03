@@ -50,6 +50,9 @@ func runDevelop(args []string) {
 		}
 
 		primal.Options = opts
+		inputPath = getDirPath(inputPath)
+		primal.Options.Root = inputPath
+		fmt.Println(primal.Options.Root)
 		primal.Options.Watch = true
 
 		switch platformType {
@@ -72,4 +75,5 @@ func runDevelop(args []string) {
 		return
 	}
 	fmt.Print("yaml file not found for path ", inputPath, "\n")
+	fmt.Print(inputPath)
 }
