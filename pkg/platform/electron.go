@@ -5,14 +5,11 @@ import (
 
 	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/operator"
-	"inspr.dev/primal/pkg/workflow"
 )
 
 // Electron defines an electron platform data
 type Electron struct {
 	*Platform
-
-	workflow workflow.Workflow
 }
 
 // Electron returns an electron platform with it's tasks
@@ -22,7 +19,7 @@ func (p *Platform) Electron() api.PlatformInterface {
 	}
 
 	for _, ops := range operator.MainOps {
-		electron.workflow.Add(ops.Task())
+		electron.Platform.Workflow.Add(ops.Task())
 	}
 
 	return electron
