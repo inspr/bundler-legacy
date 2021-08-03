@@ -28,7 +28,7 @@ func (p *Platform) Web() api.PlatformInterface {
 
 // Run executes the workflow for the web platform
 func (w *Web) Run() {
-	w.Bundler.Target("client").Build()
+	w.Bundler.Target("server").Build()
 	w.workflow.Run()
 }
 
