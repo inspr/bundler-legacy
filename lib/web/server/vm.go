@@ -7,6 +7,9 @@ import (
 	"rogchap.com/v8go"
 )
 
+// TODO: modify the structure so VM is initialized and can accept new contexts
+// based on files inputed in the application server
+
 // VM defines the vm structure and its fields
 type VM struct {
 	path string
