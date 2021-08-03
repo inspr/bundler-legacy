@@ -37,7 +37,7 @@ Main:
 
 			for _, task := range w.Tasks {
 				if task.State != IDLE {
-					continue Main
+					continue
 				}
 
 				// check if parents are done
