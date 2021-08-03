@@ -1,7 +1,6 @@
 package operator
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path"
 
@@ -34,7 +33,7 @@ func (static *Static) Task() workflow.Task {
 
 				data, err := ioutil.ReadFile(fullPath)
 				if err != nil {
-					fmt.Println(err)
+					self.ErrChan <- err
 				}
 
 				filename := path.Base(relativePath)
