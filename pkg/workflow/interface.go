@@ -1,5 +1,8 @@
 package workflow
 
+// ErrChan is a channel for passing errors from Tasks
+type ErrChan chan error
+
 // Status is an enum for possible Operators run status
 type Status int
 
@@ -27,9 +30,11 @@ type Task struct {
 	DependsOn []*Task
 
 	State Status
+	ErrChan
 }
 
 // Workflow is a set of tasks with a predefined order of execution
 type Workflow struct {
 	Tasks []*Task
+	ErrChan
 }

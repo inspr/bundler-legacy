@@ -31,7 +31,11 @@ func (disk *Disk) Task() workflow.Task {
 			}
 
 			for key, file := range disk.Fs.Raw() {
-				f, _ := os.Create(path + key)
+				f, err := os.Create(path + key)
+				if err != nil {
+					self.ErrChan <- err
+				}
+
 				f.Write(file)
 			}
 
