@@ -6,7 +6,7 @@ import (
 	"inspr.dev/primal/lib/web/server/controller"
 )
 
-func Start(ctx context.Context, port string, path string) {
+func Start(ctx context.Context, port string) {
 
 	server := controller.NewServer(ctx, port)
 

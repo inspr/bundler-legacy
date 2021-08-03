@@ -29,6 +29,6 @@ func NewServer(ctx context.Context, port string) *Server {
 
 // Run starts the server on the port 8000
 func (s *Server) Run() {
-	fmt.Println("server running")
+	fmt.Println("server running on port: ", s.port)
 	log.Fatal(http.ListenAndServe(":"+s.port, s.mux))
 }

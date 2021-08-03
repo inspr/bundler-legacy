@@ -40,7 +40,8 @@ var contentTypes = map[string]string{
 // Handler is a structure which cointains methods to handle
 // requests received by the UID Provider API
 type Handler struct {
-	ctx context.Context
+	ctx      context.Context
+	DataPath string
 }
 
 // Handler is an alias of the api router function
@@ -53,11 +54,10 @@ func NewHandler(ctx context.Context) *Handler {
 	}
 }
 
-func (h *Handler) ServerHandler() HandlerFunc {
+// InitBuildDir handles request that defines the directory which contains the files to be served
+func (h *Handler) InitBuildDir() HandlerFunc {
 	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var data models.ServerDI
-		path := r.URL.Path[0:]
-		setContentType(w, path)
 
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
@@ -67,20 +67,36 @@ func (h *Handler) ServerHandler() HandlerFunc {
 		}
 
 		if validFile(data.Path) {
-			// TODO: get files and use the server to serve them
+			h.DataPath = data.Path
+			return
 		}
 
-		logger.Printf("file %s not found", path)
+		logger.Printf("file %s not found", data.Path)
 		writeResponse(w, http.StatusNotFound, "file not found for given path")
-		return
 	})
 }
 
+// ServeFiles serves the files on the directory specified by 'InitBuildDir' handler
+func (h *Handler) ServeFiles() HandlerFunc {
+	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		path := r.URL.Path[0:]
+		if path != "/" {
+			setContentType(w, path)
+			path = h.DataPath + path
+		} else {
+			path = h.DataPath + "/index.html"
+		}
+
+		http.ServeFile(w, r, path)
+	})
+}
+
+// HealthCheck is a handler for health checking the server
 func (h *Handler) HealthCheck() HandlerFunc {
 	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		setCors(w)
-		fmt.Println("health checking")
-		writeResponse(w, http.StatusOK, "server is")
+		writeResponse(w, http.StatusOK, "server is running!")
 	})
 }
 
@@ -114,12 +130,9 @@ func setCacheDuration(w http.ResponseWriter, seconds int64) {
 }
 
 // validFile checks if given filePath exists
-func validFile(filePath string) bool {
-	var err error
-	if _, err = os.Stat(filePath); err == nil {
-		return true
-	} else if os.IsNotExist(err) {
+func validFile(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return false
 	}
-	panic(err)
+	return true
 }
