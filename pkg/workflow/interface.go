@@ -27,7 +27,7 @@ type Task struct {
 
 	Run func(*Task)
 
-	DependsOn []*Task
+	Dependencies map[string]*Task
 
 	State Status
 	ErrChan
@@ -35,6 +35,6 @@ type Task struct {
 
 // Workflow is a set of tasks with a predefined order of execution
 type Workflow struct {
-	Tasks []*Task
+	Tasks map[string]*Task
 	ErrChan
 }

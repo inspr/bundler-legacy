@@ -3,6 +3,7 @@ package platform
 import (
 	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/operator"
+	"inspr.dev/primal/pkg/workflow"
 )
 
 // Web defines a web platform data
@@ -15,10 +16,12 @@ func (p *Platform) Web() api.PlatformInterface {
 	web := &Web{
 		Platform: p,
 	}
-
+	web.Platform.Workflow.Tasks = map[string]*workflow.Task{}
 	for _, ops := range operator.MainOps {
 		web.Platform.Workflow.Add(ops.Task())
 	}
+
+	addDependencies(web.Platform.Workflow.Tasks)
 
 	return web
 }
@@ -40,4 +43,9 @@ func (w *Web) Watch() {
 
 	go server.Start(w.Fs)
 	GracefullShutdown()
+}
+
+func addDependencies(tasks map[string]*workflow.Task) {
+	tasks["html"].DependsOn(tasks["disk"])
+	tasks["logger"].DependsOn(tasks["disk"])
 }
