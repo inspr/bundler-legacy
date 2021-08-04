@@ -84,45 +84,6 @@ func (bundler *Bundler) WithDevelopMode() *Bundler {
 	return bundler
 }
 
-// TODO: Fix root to start from ./template
-// Target sets bundler to work in client or server mode
-func (bundler *Bundler) Target(name string) *Bundler {
-	clientEntry := fmt.Sprintf(`
-	import createApp from "@primal/web/client"
-	import Root from "%s"
-	createApp(Root)
-	`, "./template")
-
-	serverEntry := fmt.Sprintf(`
-	import createApp from "@primal/web/server"
-	import Root from "%s"
-	createApp(Root)
-	`, "./template")
-
-	switch name {
-	case "client":
-		bundler.mode = "client"
-		bundler.options.Stdin = &esbuild.StdinOptions{
-			Contents:   clientEntry,
-			ResolveDir: bundler.outdir,
-			Sourcefile: "client.js",
-			Loader:     esbuild.LoaderTSX,
-		}
-	case "server":
-		bundler.mode = "server"
-		bundler.options.Stdin = &esbuild.StdinOptions{
-			Contents:   serverEntry,
-			ResolveDir: bundler.outdir,
-			Sourcefile: "server.js",
-			Loader:     esbuild.LoaderTSX,
-		}
-	default:
-		panic("target must be client or server")
-	}
-
-	return bundler
-}
-
 func (bundler *Bundler) writeResultsToFs(r esbuild.BuildResult) {
 	for _, out := range r.OutputFiles {
 		outFile := strings.TrimPrefix(out.Path, bundler.outdir)

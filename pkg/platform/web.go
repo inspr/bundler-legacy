@@ -25,13 +25,13 @@ func (p *Platform) Web() api.PlatformInterface {
 
 // Run executes the workflow for the web platform
 func (w *Web) Run() {
-	w.Bundler.Target("server").Build()
+	w.Bundler.Build()
 	w.Platform.Workflow.Run()
 }
 
 // Watch executes the workflow for the web platform in watch mode
 func (w *Web) Watch() {
-	w.Bundler.Target("client").Watch()
+	w.Bundler.Watch()
 	w.Platform.Workflow.Run()
 
 	server := Server{

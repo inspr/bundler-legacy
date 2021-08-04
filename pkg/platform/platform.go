@@ -26,7 +26,7 @@ func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (api.Platf
 
 	switch options.Platform {
 	case api.PlatformWeb:
-		platform.Bundler = bundler.NewWebBundler(options.Root, fs)
+		platform.Bundler = bundler.NewWebBundler(options.Watch, options.Root, fs)
 		return platform.Web(), nil
 	case api.PlatformElectron:
 		return platform.Electron(), nil
