@@ -200,6 +200,14 @@ const Hero = () => (
 // const LeftSide = () => {}
 // const RightSide = () => {}
 
+const Button = () => {
+    return (
+        <button onClick={() => send('json', 'here is my message')}>
+            Send JSON
+        </button>
+    )
+}
+
 const Root = () => (
     <StrictMode>
         <ZStack>
@@ -209,22 +217,49 @@ const Root = () => (
     </StrictMode>
 )
 
-// Create WebSocket connection.
-const socket = new WebSocket('ws://localhost:3049/ws')
+let ws: Record<string, WebSocket> = {}
 
-// Connection opened
-socket.addEventListener('open', function (event) {
-    socket.send('Hello Server!')
-})
+const initWS = (path: string) => {
+    console.log('WS init')
+    if (ws[path]) {
+        ws[path].close()
+        // @ts-ignore
+        ws[path] = null
+    }
 
-// Listen for messages
-socket.addEventListener('message', function (event) {
-    console.log('Message from server ', event.data)
-    location.reload()
-})
+    const concreteWS = (ws[path] = new WebSocket(`ws://localhost:3049/${path}`))
+    concreteWS.onopen = function () {
+        console.log('ws opened')
+    }
+    concreteWS.onmessage = function (e) {
+        if (path === 'got-update') {
+            console.log('path === got-update')
+            window.location.reload()
+        }
+        console.log(`path: ${path}  ws msg: ${e.data}`)
+    }
+    concreteWS.onclose = function (e) {
+        console.log('ws closed')
+    }
+
+    console.log('WS inited')
+}
+
+function send(path: string, msg: string) {
+    const m = JSON.stringify({ Msg: msg, Path: 'json' })
+
+    console.log(`send to ${path}, msg is : ${m}`)
+
+    ws[path].send(m)
+}
 
 import('./test').then(({ works }) => {
     console.log('works: ', works)
+
+    // TODO: create component to control WS with help of state (maybe)
+    // Init websockets
+    initWS('got-update')
+    initWS('json')
 })
 
 export default Root

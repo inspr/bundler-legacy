@@ -48,18 +48,50 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
 
-// EchoServer echos the data received on the WebSocket
-func (s *Server) EchoServer(ws *websocket.Conn) {
+// TODO:
+// T is a test struct
+type T struct {
+	Msg  string
+	Path string
+}
+
+// jsonRecieveServer prints message sent from client using websocket.JSON
+func jsonRecieveServer(ws *websocket.Conn) {
+	for {
+		var msg T
+		// Receive receives a text message serialized T as JSON.
+		err := websocket.JSON.Receive(ws, &msg)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("recived:%#v\n", msg)
+
+		defer ws.Close()
+	}
+}
+
+// updateServer listens for server reload chanel and sends to client message about update using websocket.JSON
+func (s *Server) updateServer(ws *websocket.Conn) {
 	for {
 		<-(s.reload)
-		ws.Write([]byte("some message"))
+		msg := "bundle updated"
+		err := websocket.JSON.Send(ws, msg)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("send:%#v\n", msg)
+
+		defer ws.Close()
 	}
 }
 
 // Start runs the dev server with the given filesystem in localhost:3049
 func (s *Server) Start(files filesystem.FileSystem) {
-	// ! needs to be implemeted with gorrila (maybe) so it works
-	// go http.Handle("/ws", websocket.Handler(s.EchoServer))
+	// WS handlers
+	http.Handle("/json", websocket.Handler(jsonRecieveServer))
+	http.Handle("/got-update", websocket.Handler(s.updateServer))
 
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var file []byte
