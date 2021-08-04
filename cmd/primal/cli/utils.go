@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"inspr.dev/primal/pkg/api"
@@ -42,4 +43,10 @@ func getConfigs(path string) (api.PrimalOptions, error) {
 	yaml.Unmarshal(bContent, &config)
 
 	return config, nil
+}
+
+func getDirPath(path string) string {
+	dir := strings.Split(path, "/")
+	dir = dir[:len(dir)-1]
+	return strings.Join(dir, "/")
 }

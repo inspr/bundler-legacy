@@ -44,9 +44,10 @@ type Operator struct {
 type Platform struct {
 	PlatformInterface
 
-	Options PrimalOptions
-	Fs      filesystem.FileSystem
-	Bundler *bundler.Bundler
+	Options  PrimalOptions
+	Fs       filesystem.FileSystem
+	Bundler  *bundler.Bundler
+	Workflow *workflow.Workflow
 }
 
 const (

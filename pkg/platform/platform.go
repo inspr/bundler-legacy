@@ -7,6 +7,7 @@ import (
 	"inspr.dev/primal/pkg/bundler"
 	"inspr.dev/primal/pkg/filesystem"
 	"inspr.dev/primal/pkg/operator"
+	"inspr.dev/primal/pkg/workflow"
 )
 
 // Platform is created so it's possible to define methods
@@ -18,8 +19,9 @@ func NewPlatform(options api.PrimalOptions, fs filesystem.FileSystem) (api.Platf
 	operator.NewOperator(options, fs).InitMainOperators()
 
 	platform := &Platform{
-		Options: options,
-		Fs:      fs,
+		Workflow: workflow.NewWorkflow(),
+		Options:  options,
+		Fs:       fs,
 	}
 
 	switch options.Platform {

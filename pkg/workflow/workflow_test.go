@@ -82,42 +82,40 @@ func TestWorkflow_Run(t *testing.T) {
 // Auxiliar methods
 
 func generateMockWorkflow() *Workflow {
-	return &Workflow{
-		[]*Task{
+	w := &Workflow{}
+
+	w.Add(Task{
+		ID:    "task1",
+		State: DONE,
+	})
+	w.Add(Task{
+		ID:    "task2",
+		State: DONE,
+	})
+
+	return w
+}
+
+func mockWorkflowWithDependentTasks() *Workflow {
+	wf := Workflow{}
+
+	wf.Add(Task{
+		ID:    "task2",
+		State: RUNNING,
+	})
+	wf.Add(Task{
+		ID:    "task3",
+		State: IDLE,
+		DependsOn: []*Task{
 			{
 				ID:    "task1",
 				State: DONE,
 			},
-			{
-				ID:    "task2",
-				State: DONE,
-			},
 		},
-	}
-}
-
-func mockWorkflowWithDependentTasks() *Workflow {
-	wf := Workflow{
-		[]*Task{
-			{
-				ID:    "task2",
-				State: RUNNING,
-			},
-			{
-				ID:    "task3",
-				State: IDLE,
-				DependsOn: []*Task{
-					{
-						ID:    "task1",
-						State: DONE,
-					},
-				},
-				Run: func(self *Task) {
-					self.State = DONE
-				},
-			},
+		Run: func(self *Task) {
+			self.State = DONE
 		},
-	}
+	})
 
 	return &wf
 }
