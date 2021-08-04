@@ -200,20 +200,6 @@ const Hero = () => (
 // const LeftSide = () => {}
 // const RightSide = () => {}
 
-const Root = () => (
-    <StrictMode>
-        <ZStack>
-            <Hero />
-            <Header />
-        </ZStack>
-    </StrictMode>
-)
-
-// const Button = () => {
-//     return (
-//         <button onClick={() => WsSend('here is my message')}>Send JSON</button>
-//     )
-// }
 // const WsSend = async (msg: string) => {
 //     try {
 //         const resp = await fetch('/publish', {
@@ -230,6 +216,21 @@ const Root = () => (
 //     }
 // }
 
+const Button = () => {
+    return (
+        <button onClick={() => WsSend('here is my message')}>Send JSON</button>
+    )
+}
+
+const Root = () => (
+    <StrictMode>
+        <ZStack>
+            <Hero />
+            <Header />
+        </ZStack>
+    </StrictMode>
+)
+
 const WsUpdate = () => {
     const conn = new WebSocket(`ws://${location.host}/ws`)
 
@@ -242,11 +243,11 @@ const WsUpdate = () => {
             setTimeout(WsUpdate, 1000)
         }
     })
+
     conn.addEventListener('open', (ev) => {
         console.info('WsUpdate: websocket connected')
     })
 
-    // This is where we handle messages received.
     conn.addEventListener('message', (ev) => {
         if (typeof ev.data !== 'string') {
             console.error('WsUpdate: unexpected message type', typeof ev.data)
@@ -262,6 +263,7 @@ const WsUpdate = () => {
 import('./test').then(({ works }) => {
     console.log('works: ', works)
 
+    // TODO: websocket initialization shouldn't be here, leaved this just for test
     // Init websockets
     WsUpdate()
 })
