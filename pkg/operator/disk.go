@@ -25,21 +25,26 @@ func (disk *Disk) Task() workflow.Task {
 		State: workflow.IDLE,
 		Run: func(self *workflow.Task) {
 			path := disk.Options.Root + "/__build__"
-			if _, err := os.Stat(path); os.IsNotExist(err) {
-				os.Mkdir(path, 0755)
-				os.Mkdir(path+"/assets", 0755)
-			}
-
-			for key, file := range disk.Fs.Raw() {
-				f, err := os.Create(path + key)
-				if err != nil {
-					self.ErrChan <- err
+			dir := disk.Options.Root + "/template"
+			if _, erro := os.Stat(dir); erro == nil {
+				if _, err := os.Stat(path); os.IsNotExist(err) {
+					os.Mkdir(path, 0755)
+					os.Mkdir(path+"/assets", 0755)
 				}
 
-				f.Write(file)
-			}
+				for key, file := range disk.Fs.Raw() {
+					f, err := os.Create(path + key)
+					if err != nil {
+						self.ErrChan <- err
+					}
 
-			self.State = workflow.DONE
+					f.Write(file)
+				}
+
+				self.State = workflow.DONE
+			} else if os.IsNotExist(erro) {
+				self.ErrChan <- erro
+			}
 		},
 	}
 }
