@@ -200,14 +200,6 @@ const Hero = () => (
 // const LeftSide = () => {}
 // const RightSide = () => {}
 
-const Button = () => {
-    return (
-        <button onClick={() => send('json', 'here is my message')}>
-            Send JSON
-        </button>
-    )
-}
-
 const Root = () => (
     <StrictMode>
         <ZStack>
@@ -217,49 +209,61 @@ const Root = () => (
     </StrictMode>
 )
 
-let ws: Record<string, WebSocket> = {}
+// const Button = () => {
+//     return (
+//         <button onClick={() => WsSend('here is my message')}>Send JSON</button>
+//     )
+// }
+// const WsSend = async (msg: string) => {
+//     try {
+//         const resp = await fetch('/publish', {
+//             method: 'POST',
+//             body: msg,
+//         })
+//         if (resp.status !== 202) {
+//             throw new Error(
+//                 `Unexpected HTTP Status ${resp.status} ${resp.statusText}`
+//             )
+//         }
+//     } catch (err) {
+//         console.error(`Publish failed: ${err.message}`)
+//     }
+// }
 
-const initWS = (path: string) => {
-    console.log('WS init')
-    if (ws[path]) {
-        ws[path].close()
-        // @ts-ignore
-        ws[path] = null
-    }
+const WsUpdate = () => {
+    const conn = new WebSocket(`ws://${location.host}/ws`)
 
-    const concreteWS = (ws[path] = new WebSocket(`ws://localhost:3049/${path}`))
-    concreteWS.onopen = function () {
-        console.log('ws opened')
-    }
-    concreteWS.onmessage = function (e) {
-        if (path === 'got-update') {
-            console.log('path === got-update')
-            window.location.reload()
+    conn.addEventListener('close', (ev) => {
+        console.log(
+            `WebSocket WsUpdate Disconnected code: ${ev.code}, reason: ${ev.reason}`
+        )
+        if (ev.code !== 1001) {
+            console.log('WsUpdate: Reconnecting in 1s', true)
+            setTimeout(WsUpdate, 1000)
         }
-        console.log(`path: ${path}  ws msg: ${e.data}`)
-    }
-    concreteWS.onclose = function (e) {
-        console.log('ws closed')
-    }
+    })
+    conn.addEventListener('open', (ev) => {
+        console.info('WsUpdate: websocket connected')
+    })
 
-    console.log('WS inited')
-}
-
-function send(path: string, msg: string) {
-    const m = JSON.stringify({ Msg: msg, Path: 'json' })
-
-    console.log(`send to ${path}, msg is : ${m}`)
-
-    ws[path].send(m)
+    // This is where we handle messages received.
+    conn.addEventListener('message', (ev) => {
+        if (typeof ev.data !== 'string') {
+            console.error('WsUpdate: unexpected message type', typeof ev.data)
+            return
+        }
+        const data = JSON.parse(ev.data)
+        if (data.Updated && !data.Errors) {
+            location.reload()
+        }
+    })
 }
 
 import('./test').then(({ works }) => {
     console.log('works: ', works)
 
-    // TODO: create component to control WS with help of state (maybe)
     // Init websockets
-    initWS('got-update')
-    initWS('json')
+    WsUpdate()
 })
 
 export default Root
