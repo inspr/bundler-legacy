@@ -16,7 +16,6 @@ type FileServerHandler = func(w http.ResponseWriter, r *http.Request) (goNext bo
 
 /*
 FileServer wraps the http.FileServer checking to see if the url path exists in it FileSystems(filesystem.FileSystem, http.FileSystem) first.
-If the file fails to exist it calls the inMemoryHandler function then onDiskHandler
 The implementation of Handlers can choose to either modify the request, e.g. change the URL path and return true to have the
 default FileServer handling to still take place, or return false to stop further processing, for example if you wanted
 to write a custom response
@@ -84,35 +83,4 @@ func inMemoryHandler(w http.ResponseWriter, r *http.Request, fs filesystem.FileS
 	w.Write(file)
 
 	return false
-}
-
-// ContentTypes defines the supported file content types
-var ContentTypes = map[string]string{
-	".css": "text/css; charset=UTF-8",
-
-	".js":  "application/javascript; charset=UTF-8",
-	".mjs": "application/javascript; charset=UTF-8",
-
-	".json":   "application/json; charset=UTF-8",
-	".jsonld": "application/ld+json; charset=UTF-8",
-
-	".png":  "image/png",
-	".webp": "image/webp",
-	".jpg":  "image/jpeg",
-	".jpeg": "image/jpeg",
-	".svg":  "image/svg+xml; charset=utf-8",
-
-	".woff":  "font/woff",
-	".woff2": "font/woff2",
-}
-
-// SetContentType adds the given file's content type to the header
-func SetContentType(w http.ResponseWriter, file string) {
-	ext := filepath.Ext(file)
-	w.Header().Add("Content-Type", ContentTypes[ext])
-}
-
-// SetCacheDuration adds Cache-Control header with the given amount of seconds
-func SetCacheDuration(w http.ResponseWriter, seconds int64) {
-	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
