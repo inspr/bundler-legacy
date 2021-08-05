@@ -116,19 +116,19 @@ func newServerBundler(outdir string, fs filesystem.FileSystem) *bundler.Bundler 
 			Bundle:            true,
 			Incremental:       true,
 			Metafile:          true,
-			Splitting:         true,
+			Splitting:         false,
 			Write:             false,
 			ChunkNames:        "[name].[hash]",
 			AssetNames:        "[name].[hash]",
 			Outdir:            outdir,
 			Define:            bundler.Definition,
 			Loader:            bundler.LoadableExtensions,
-			Platform:          esbuild.PlatformBrowser,
+			Platform:          esbuild.PlatformNode,
 			Target:            esbuild.ES2015,
 			LogLevel:          esbuild.LogLevelSilent,
 			Sourcemap:         esbuild.SourceMapExternal,
 			LegalComments:     esbuild.LegalCommentsExternal,
-			Format:            esbuild.FormatESModule,
+			Format:            esbuild.FormatCommonJS,
 			PublicPath:        "/static/",
 			JSXFactory:        "__jsx",
 			ResolveExtensions: bundler.AddPlatformExtensions("web", bundler.Extensions),
@@ -143,6 +143,6 @@ func newServerBundler(outdir string, fs filesystem.FileSystem) *bundler.Bundler 
 }
 
 func addDependencies(tasks map[string]*workflow.Task) {
-	tasks["html"].DependsOn(tasks["disk"])
+	tasks["disk"].DependsOn(tasks["html"])
 	tasks["logger"].DependsOn(tasks["disk"])
 }

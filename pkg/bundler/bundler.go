@@ -21,7 +21,7 @@ type Bundler struct {
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
 
 // TODO: Definition should be dynamicly setted depending on platform
-var Definition = map[string]string{"__WEB__": "true"}
+var Definition = map[string]string{"__WEB__": "true", "process.env.NODE_ENV": "'production'"}
 var LoadableExtensions = map[string]esbuild.Loader{
 	".css": esbuild.LoaderCSS,
 	".png": esbuild.LoaderFile,
