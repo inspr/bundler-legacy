@@ -115,15 +115,17 @@ func (s *Server) Start(ctx context.Context, files filesystem.FileSystem) {
 
 	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
 
-	go server.ListenAndServe()
+	go func() {
+		log.Fatal(server.ListenAndServe())
+	}()
 
 	<-ctx.Done()
 
-	GracefullShutdown(server)
+	gracefullShutdown(server)
 }
 
-// GracefullShutdown gracefully shuts down the platform bein executed
-func GracefullShutdown(server *http.Server) {
+// gracefullShutdown gracefully shuts down the platform bein executed
+func gracefullShutdown(server *http.Server) {
 	fmt.Println("gracefully shutting down dev server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
