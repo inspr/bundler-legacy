@@ -76,7 +76,7 @@ func (h *Handler) ServeFiles(machine vm.Interface) HandlerFunc {
 		})
 
 		// Return the HTML for the user, sort of
-		w.Write(vmResponse.Data)
+		w.Write(vmResponse.HTML)
 
 		http.ServeFile(w, r, path)
 	})
