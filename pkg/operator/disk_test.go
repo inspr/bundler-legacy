@@ -43,6 +43,7 @@ func TestDisk_Task(t *testing.T) {
 	currDir, _ := os.Getwd()
 	root := path.Join(currDir, "../../")
 	buildFolder := path.Join(root, "__build__")
+	templateFolder := path.Join(root, "template")
 
 	diskOperator := NewMockOperator(api.PrimalOptions{
 		Root: root,
@@ -74,12 +75,15 @@ func TestDisk_Task(t *testing.T) {
 	for _, tt := range tests {
 		diskOperator.Fs.Write(tt.fileName, tt.fileContent)
 
-		testWorkflow.Run()
+		workflow.NewWorkflow().Run()
 
-		if _, err := os.Stat(buildFolder + tt.fileName); os.IsNotExist(err) {
-			if !tt.wantErr {
-				t.Errorf("Disk.TestTask() error = %v, wantErr %v", err, tt.wantErr)
+		if _, err := os.Stat(templateFolder); os.IsNotExist(err) {
+			if _, err := os.Stat(buildFolder + tt.fileName); os.IsNotExist(err) {
+				if !tt.wantErr {
+					t.Errorf("Disk.TestTask() error = %v, wantErr %v", err, tt.wantErr)
+				}
 			}
+			t.Errorf("Disk.TestTask() error = %v, wantErr %v", err, tt.wantErr)
 		}
 	}
 
