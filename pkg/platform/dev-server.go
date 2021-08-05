@@ -92,7 +92,26 @@ func (s *Server) Start(ctx context.Context, files filesystem.FileSystem) {
 	// HotReload
 	go http.HandleFunc("/hmr", s.SendBundleUpdates)
 
-	server := &http.Server{Addr: ":8080", Handler: nil}
+	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		var file []byte
+		var err error
+		path := r.URL.Path[0:]
+		switch path {
+		case "/":
+			file, err = files.Get("/index.html")
+		default:
+			file, err = files.Get(path)
+		}
+		if err == nil {
+			SetContentType(w, path)
+			// SetCacheDuration(w, 31536000)
+			w.Write(file)
+		} else {
+			w.WriteHeader(404)
+		}
+	})
+
+	server := &http.Server{Addr: ":3049", Handler: nil}
 
 	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
 
