@@ -65,6 +65,8 @@ func execVirtualMachine(machine *vm, runCtx Request, repl chan Response) {
 	_, err := ctx1.RunScript(string(machine.script), runCtx.UUID.String())
 	if err != nil {
 		fmt.Println(err)
+		repl <- Response{}
+		close(repl)
 	}
 }
 

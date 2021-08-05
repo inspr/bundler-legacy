@@ -7,7 +7,7 @@ import {
     View,
     ViewStyle,
 } from '@primal/primitives'
-import { cache, compose, createState, state } from '@primal/state'
+import { compose, createState, state } from '@primal/state'
 import { cloneElement, FunctionComponent, StrictMode } from 'react'
 import bg from './bg.png'
 import logo from './logo.png'
@@ -17,7 +17,7 @@ interface Task {
     description: string
 }
 
-const myList = cache(createState<Task[]>([]), 'listChico')
+const myList = (createState<Task[]>([]))
 
 const addToList = (description: string) => {
     const newList = myList.unwrap()!
@@ -27,40 +27,40 @@ const addToList = (description: string) => {
 
 addToList(`Works ${Math.random()}`)
 
-const mouseTracker = cache(createMouseTracker(), 'mousepos')
+const mouseTracker = (createMouseTracker())
 // mouseTracker.subscribe(console.log)
 
 const geoTracker = createGeoLocationTracker()
 
 geoTracker.subscribe(console.log)
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/template/sw.js').then(
-            (registration) => {
-                // Registration was successful
-                console.log(
-                    'ServiceWorker registration successful with scope: ',
-                    registration.scope
-                )
-            },
-            (err) => {
-                // registration failed :(
-                console.log('ServiceWorker registration failed: ', err)
-            }
-        )
-    })
-}
+// if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', () => {
+//         navigator.serviceWorker.register('/template/sw.js').then(
+//             (registration) => {
+//                 // Registration was successful
+//                 console.log(
+//                     'ServiceWorker registration successful with scope: ',
+//                     registration.scope
+//                 )
+//             },
+//             (err) => {
+//                 // registration failed :(
+//                 console.log('ServiceWorker registration failed: ', err)
+//             }
+//         )
+//     })
+// }
 
-const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-const dark = createState({ dark: darkModeMediaQuery.matches })
+// const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+const dark = createState({ dark: true })
 
-darkModeMediaQuery.addListener((e) => {
-    const darkModeOn = e.matches
-    dark.publish({ dark: darkModeOn })
-    // title.publish(createTitle(darkModeOn))
-    console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
-})
+// darkModeMediaQuery.addListener((e) => {
+//     const darkModeOn = e.matches
+//     dark.publish({ dark: darkModeOn })
+//     // title.publish(createTitle(darkModeOn))
+//     console.log(`Dark mode is ${darkModeOn ? '🌒 on' : '🌞 off'}.`)
+// })
 
 mouseTracker.subscribe(({ x, y }) => {
     if (x >= 200 && y >= 200) {
@@ -77,7 +77,7 @@ const title = compose(
     ({ dark: darkIsOn }) => `Primal | Mode is ${darkIsOn ? 'dark' : 'light'}`
 )
 
-title.subscribe((t) => (document.title = t))
+// title.subscribe((t) => (document.title = t))
 
 interface DarkProps {
     dark: boolean
@@ -260,12 +260,12 @@ const WsUpdate = () => {
     })
 }
 
-import('./test').then(({ works }) => {
-    console.log('works: ', works)
+// import('./test').then(({ works }) => {
+//     console.log('works: ', works)
 
-    // TODO: websocket initialization shouldn't be here, leaved this just for test
-    // Init websockets
-    WsUpdate()
-})
+//     // TODO: websocket initialization shouldn't be here, leaved this just for test
+//     // Init websockets
+//     WsUpdate()
+// })
 
 export default Root

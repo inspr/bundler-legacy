@@ -10,14 +10,14 @@ const initialPos: MousePosition = { x: 0, y: 0 }
 const createMouseTracker = () => {
     const mousePos = createState(initialPos)
 
-    document.addEventListener('mousemove', (e) => {
-        const pos: MousePosition = {
-            x: e.offsetX,
-            y: e.offsetX,
-        }
+    // document.addEventListener('mousemove', (e) => {
+    //     const pos: MousePosition = {
+    //         x: e.offsetX,
+    //         y: e.offsetX,
+    //     }
 
-        mousePos.publish(pos)
-    })
+    //     mousePos.publish(pos)
+    // })
 
     return mousePos
 }
@@ -43,25 +43,25 @@ interface GeoPosition {
 const createGeoLocationTracker = () => {
     const geoState = createState<GeoPosition>({ latitude: 0, longitude: 0 })
 
-    navigator.geolocation.getCurrentPosition(
-        ({ coords: { latitude, longitude } }) => {
-            geoState.publish({
-                longitude,
-                latitude,
-            })
-        },
-        () => {}
-    )
+    // navigator.geolocation.getCurrentPosition(
+    //     ({ coords: { latitude, longitude } }) => {
+    //         geoState.publish({
+    //             longitude,
+    //             latitude,
+    //         })
+    //     },
+    //     () => { }
+    // )
 
-    navigator.geolocation.watchPosition(
-        ({ coords: { latitude, longitude } }) => {
-            geoState.publish({
-                longitude,
-                latitude,
-            })
-        },
-        () => {}
-    )
+    // navigator.geolocation.watchPosition(
+    //     ({ coords: { latitude, longitude } }) => {
+    //         geoState.publish({
+    //             longitude,
+    //             latitude,
+    //         })
+    //     },
+    //     () => { }
+    // )
 
     return geoState
 }

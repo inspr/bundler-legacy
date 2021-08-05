@@ -5,8 +5,13 @@ import (
 	"reflect"
 	"testing"
 
+	_ "embed"
+
 	"github.com/google/uuid"
 )
+
+// go:embed mock_entry
+var embbededScript string
 
 func TestNewVM(t *testing.T) {
 	type args struct {
@@ -20,13 +25,13 @@ func TestNewVM(t *testing.T) {
 		want Response
 	}{
 		{
-			"test1", // Name of the TEST
-			args{
+			name: "run VM with valid script content",
+			args: args{
 				ctx:    context.Background(),
-				script: "run('chico')",
+				script: embbededScript,
 			}, // Arguments for the Test
-			Response{
-				HTML: []byte("chico"),
+			want: Response{
+				HTML: []byte("oi"),
 			},
 		},
 		// TODO: Add test cases.
@@ -43,7 +48,7 @@ func TestNewVM(t *testing.T) {
 			})
 
 			if got := <-result; !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Run result was = %v, want %v", got, tt.want)
+				t.Errorf("Run result was = %v, want %v", string(got.HTML), tt.want)
 			}
 
 			virtual.Close()

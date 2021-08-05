@@ -4,19 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"inspr.dev/primal/lib/web/server/vm"
 )
 
-var logger *log.Logger
+var logger *zap.Logger
 
 func init() {
-	logger = log.Default()
+	logger, _ = zap.NewDevelopment()
 }
 
 var contentTypes = map[string]string{
@@ -59,24 +59,29 @@ func NewHandler(ctx context.Context, path string) *Handler {
 // ServeFiles serves the files on the directory specified by 'InitBuildDir' handler
 func (h *Handler) ServeFiles(machine vm.Interface) HandlerFunc {
 	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// TODO: if url doesn't contain any extensions, send it to VM
+		logger.Debug("handling files")
 
 		path := r.URL.Path[0:]
-		if path != "/" {
+		if filepath.Ext(path) == "" {
+			logger.Debug("sending new page to vm")
+
+			vmResponse := <-machine.Run(vm.Request{
+				UUID: uuid.New(),
+				Path: path,
+			})
+			// Return the HTML for the user, sort of
+			w.Write(vmResponse.HTML)
+			return
+		} else if path != "/" {
 			setContentType(w, path)
 			path = h.dataPath + path
+
+			logger.Debug(fmt.Sprintf("serving %s", path))
 		} else {
 			path = h.dataPath + "/index.html"
+
+			logger.Debug(fmt.Sprintf("serving %s", path))
 		}
-
-		vmResponse := <-machine.Run(vm.Request{
-			UUID: uuid.New(),
-			Path: path,
-		})
-
-		// Return the HTML for the user, sort of
-		w.Write(vmResponse.HTML)
 
 		http.ServeFile(w, r, path)
 	})
