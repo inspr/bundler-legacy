@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"fmt"
 
 	"inspr.dev/primal/pkg/api"
@@ -31,6 +32,6 @@ func (e *Electron) Run() {
 }
 
 // Watch executes the workflow for the electron platform in watch mode
-func (e *Electron) Watch() {
+func (e *Electron) Watch(ctx context.Context, cancel context.CancelFunc) {
 	fmt.Println("Implement me.")
 }

@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 
 	"inspr.dev/primal/pkg/workflow"
@@ -23,7 +24,7 @@ func (logger *Logger) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "logger",
 		State: workflow.IDLE,
-		Run: func(self *workflow.Task) {
+		Run: func(ctx context.Context, self *workflow.Task) {
 			fmt.Println(logger.Fs)
 
 			self.State = workflow.DONE

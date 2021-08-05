@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -55,7 +56,8 @@ func TestElectron_Watch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.e.Watch()
+			ctx, cancel := context.WithCancel(context.Background())
+			tt.e.Watch(ctx, cancel)
 		})
 	}
 }

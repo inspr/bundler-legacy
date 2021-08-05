@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"os"
 
 	"inspr.dev/primal/pkg/workflow"
@@ -23,7 +24,7 @@ func (disk *Disk) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "disk",
 		State: workflow.IDLE,
-		Run: func(self *workflow.Task) {
+		Run: func(ctx context.Context, self *workflow.Task) {
 			path := disk.Options.Root + "/__build__"
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				os.Mkdir(path, 0755)
@@ -32,7 +33,7 @@ func (disk *Disk) Task() workflow.Task {
 
 			for key, file := range disk.Fs.Raw() {
 				f, err := os.Create(path + key)
-				if err != nil {
+				if err == nil {
 					self.ErrChan <- err
 				}
 

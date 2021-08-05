@@ -1,5 +1,7 @@
 package workflow
 
+import "context"
+
 // ErrChan is a channel for passing errors from Tasks
 type ErrChan chan error
 
@@ -16,7 +18,7 @@ const (
 type WorkflowInterface interface {
 	Add(Task)
 	Remove(Task)
-	Run()
+	Run(ctx context.Context, cancel context.CancelFunc)
 }
 
 // Task defines an operator's execution methods and its needed data
@@ -25,9 +27,9 @@ type Task struct {
 	Before func()
 	After  func()
 
-	Run func(*Task)
+	Run func(ctx context.Context, task *Task)
 
-	DependsOn []*Task
+	Dependencies map[string]*Task
 
 	State Status
 	ErrChan
@@ -35,6 +37,6 @@ type Task struct {
 
 // Workflow is a set of tasks with a predefined order of execution
 type Workflow struct {
-	Tasks []*Task
+	Tasks map[string]*Task
 	ErrChan
 }

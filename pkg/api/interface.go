@@ -11,7 +11,7 @@ import (
 // PlatformInterface defines methods that exec a platform
 type PlatformInterface interface {
 	Run()
-	Watch()
+	Watch(ctx context.Context, cancel context.CancelFunc)
 }
 
 // OperatorInterface defines methods that returns an operator operation

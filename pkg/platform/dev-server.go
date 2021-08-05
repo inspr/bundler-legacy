@@ -6,9 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"inspr.dev/primal/pkg/filesystem"
@@ -90,23 +88,30 @@ func (s *Server) SendBundleUpdates(w http.ResponseWriter, r *http.Request) {
 }
 
 // Start runs the dev server with the given filesystem in localhost:3049
-func (s *Server) Start(files filesystem.FileSystem) {
+func (s *Server) Start(ctx context.Context, files filesystem.FileSystem) {
 	// HotReload
 	go http.HandleFunc("/hmr", s.SendBundleUpdates)
 
-	// FileServer
-	fileServer := FileServer(http.Dir("__build__"), files)
-	go http.Handle("/", http.StripPrefix("/", fileServer))
+	server := &http.Server{Addr: ":8080", Handler: nil}
 
 	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 3049), nil))
+
+	go server.ListenAndServe()
+
+	<-ctx.Done()
+
+	GracefullShutdown(server)
 }
 
 // GracefullShutdown gracefully shuts down the platform bein executed
-func GracefullShutdown() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+func GracefullShutdown(server *http.Server) {
+	fmt.Println("gracefully shutting down dev server...")
 
-	<-c
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		panic("")
+	}
 	os.Exit(1)
 }
