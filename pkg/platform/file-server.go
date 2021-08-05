@@ -59,7 +59,9 @@ func onDiskHandler(w http.ResponseWriter, r *http.Request, fs http.FileSystem, p
 	if err != nil {
 		if os.IsNotExist(err) {
 			// go next
-			fmt.Println("file doesn't exist on disk. shuting down", err)
+			w.WriteHeader(404)
+			fmt.Fprintf(w, "file doesn't exist on disk. %s", err.Error())
+
 			return false
 		}
 	}
