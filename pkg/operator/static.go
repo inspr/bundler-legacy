@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"io/ioutil"
 	"path"
 
@@ -27,7 +28,7 @@ func (static *Static) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "static",
 		State: workflow.IDLE,
-		Run: func(self *workflow.Task) {
+		Run: func(ctx context.Context, self *workflow.Task) {
 			for _, relativePath := range static.files {
 				fullPath := path.Join(static.Options.Root, relativePath)
 

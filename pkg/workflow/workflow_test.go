@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -69,7 +70,7 @@ func TestWorkflow_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go tt.w.Run()
+			go tt.w.Run(context.WithCancel(context.Background()))
 			time.Sleep(time.Microsecond * 500)
 			err := tt.check(tt.w.Tasks)
 			if err != nil {
@@ -116,7 +117,7 @@ func mockWorkflowWithDependentTasks() *Workflow {
 				State: DONE,
 			},
 		},
-		Run: func(self *Task) {
+		Run: func(ctx context.Context, self *Task) {
 			self.State = DONE
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/filesystem"
 	"inspr.dev/primal/pkg/platform"
@@ -75,7 +76,9 @@ func runDevelop(args []string) {
 		}
 
 		fmt.Printf("running platform %s in development mode!\n", platformType)
-		platform.Watch()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		platform.Watch(ctx, cancel)
 		return
 	}
 	fmt.Print("yaml file not found for path ", inputPath, "\n")

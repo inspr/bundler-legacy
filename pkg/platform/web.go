@@ -1,6 +1,8 @@
 package platform
 
 import (
+	"context"
+
 	"inspr.dev/primal/pkg/api"
 	"inspr.dev/primal/pkg/operator"
 	"inspr.dev/primal/pkg/workflow"
@@ -28,20 +30,19 @@ func (p *Platform) Web() api.PlatformInterface {
 // Run executes the workflow for the web platform
 func (w *Web) Run() {
 	w.Bundler.Target("client").Build()
-	w.Platform.Workflow.Run()
+	w.Platform.Workflow.Run(context.WithCancel(context.Background()))
 }
 
 // Watch executes the workflow for the web platform in watch mode
-func (w *Web) Watch() {
+func (w *Web) Watch(ctx context.Context, cancel context.CancelFunc) {
 	w.Bundler.Target("client").Watch()
-	w.Platform.Workflow.Run()
+	w.Platform.Workflow.Run(ctx, cancel)
 
 	server := Server{
 		reload: w.Bundler.Refresh(),
 	}
 
-	go server.Start(w.Fs)
-	GracefullShutdown()
+	server.Start(ctx, w.Fs)
 }
 
 func addDependencies(tasks map[string]*workflow.Task) {

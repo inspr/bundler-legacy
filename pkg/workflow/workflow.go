@@ -1,8 +1,8 @@
 package workflow
 
 import (
+	"context"
 	"fmt"
-	"syscall"
 )
 
 // NewWorkflow return new Workflow struct
@@ -20,13 +20,13 @@ func (w *Workflow) Add(task Task) {
 }
 
 // Run execs a workflow's tasks
-func (w *Workflow) Run() {
+func (w *Workflow) Run(ctx context.Context, cancel context.CancelFunc) {
 Main:
 	for {
 		select {
 		case err := <-w.ErrChan:
 			fmt.Println(err)
-			sendTerminateSignal()
+			cancel()
 			break Main
 		default:
 			if allTasksAreDone(w.Tasks) {
@@ -46,7 +46,7 @@ Main:
 				// check if parents are done
 				if allTasksAreDone(task.Dependencies) {
 					task.State = RUNNING
-					go task.Run(task)
+					go task.Run(ctx, task)
 				}
 			}
 		}
@@ -70,8 +70,4 @@ func (t *Task) DependsOn(tasks ...*Task) {
 	for _, task := range tasks {
 		t.Dependencies[task.ID] = task
 	}
-}
-
-func sendTerminateSignal() {
-	syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 }
