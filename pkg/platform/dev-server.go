@@ -3,13 +3,15 @@ package platform
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"golang.org/x/net/websocket"
 	"inspr.dev/primal/pkg/filesystem"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 type Server struct {
@@ -47,40 +49,48 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
 
-// EchoServer echos the data received on the WebSocket
-func (s *Server) EchoServer(ws *websocket.Conn) {
+type UpdateMessage struct {
+	Updated bool
+	Errors  bool
+}
+
+// SendBundleUpdates handler is write only WebSocket connection
+func (s *Server) SendBundleUpdates(w http.ResponseWriter, r *http.Request) {
+	c, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer c.Close(websocket.StatusInternalError, "websocket is closed")
+
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
+	defer cancel()
+
+	ctx = c.CloseRead(ctx)
+
 	for {
-		<-(s.reload)
-		ws.Write([]byte("some message"))
+		select {
+		case <-ctx.Done():
+			c.Close(websocket.StatusNormalClosure, "")
+			return
+		case <-(s.reload):
+			msg := UpdateMessage{
+				Updated: true,
+				Errors:  false,
+			}
+			err = wsjson.Write(ctx, c, msg)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
 	}
 }
 
 // Start runs the dev server with the given filesystem in localhost:3049
 func (s *Server) Start(ctx context.Context, files filesystem.FileSystem) {
-	// ! needs to be implemeted with gorrila (maybe) so it works
-	// go http.Handle("/ws", websocket.Handler(s.EchoServer))
-
-	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var file []byte
-		var err error
-
-		path := r.URL.Path[0:]
-
-		switch path {
-		case "/":
-			file, err = files.Get("/index.html")
-		default:
-			file, err = files.Get(path)
-		}
-
-		if err == nil {
-			SetContentType(w, path)
-			// SetCacheDuration(w, 31536000)
-			w.Write(file)
-		} else {
-			w.WriteHeader(404)
-		}
-	})
+	// HotReload
+	go http.HandleFunc("/hmr", s.SendBundleUpdates)
 
 	server := &http.Server{Addr: ":8080", Handler: nil}
 

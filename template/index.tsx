@@ -200,6 +200,28 @@ const Hero = () => (
 // const LeftSide = () => {}
 // const RightSide = () => {}
 
+// const WsSend = async (msg: string) => {
+//     try {
+//         const resp = await fetch('/publish', {
+//             method: 'POST',
+//             body: msg,
+//         })
+//         if (resp.status !== 202) {
+//             throw new Error(
+//                 `Unexpected HTTP Status ${resp.status} ${resp.statusText}`
+//             )
+//         }
+//     } catch (err) {
+//         console.error(`Publish failed: ${err.message}`)
+//     }
+// }
+
+const Button = () => {
+    return (
+        <button onClick={() => WsSend('here is my message')}>Send JSON</button>
+    )
+}
+
 const Root = () => (
     <StrictMode>
         <ZStack>
@@ -209,22 +231,41 @@ const Root = () => (
     </StrictMode>
 )
 
-// Create WebSocket connection.
-const socket = new WebSocket('ws://localhost:3049/ws')
+const WsUpdate = () => {
+    const conn = new WebSocket(`ws://${location.host}/hmr`)
 
-// Connection opened
-socket.addEventListener('open', function (event) {
-    socket.send('Hello Server!')
-})
+    conn.addEventListener('close', (ev) => {
+        console.log(
+            `WebSocket WsUpdate Disconnected code: ${ev.code}, reason: ${ev.reason}`
+        )
+        if (ev.code !== 1001) {
+            console.log('WsUpdate: Reconnecting in 1s', true)
+            setTimeout(WsUpdate, 1000)
+        }
+    })
 
-// Listen for messages
-socket.addEventListener('message', function (event) {
-    console.log('Message from server ', event.data)
-    location.reload()
-})
+    conn.addEventListener('open', (ev) => {
+        console.info('WsUpdate: websocket connected')
+    })
+
+    conn.addEventListener('message', (ev) => {
+        if (typeof ev.data !== 'string') {
+            console.error('WsUpdate: unexpected message type', typeof ev.data)
+            return
+        }
+        const data = JSON.parse(ev.data)
+        if (data.Updated && !data.Errors) {
+            location.reload()
+        }
+    })
+}
 
 import('./test').then(({ works }) => {
     console.log('works: ', works)
+
+    // TODO: websocket initialization shouldn't be here, leaved this just for test
+    // Init websockets
+    WsUpdate()
 })
 
 export default Root
