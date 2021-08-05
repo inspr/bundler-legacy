@@ -11,7 +11,7 @@ import (
 )
 
 // FileServerHandler provides the function signature for passing to the FileServerWith404
-type FileServerHandler = func(w http.ResponseWriter, r *http.Request) (goNext bool)
+type FileServerHandler = func(w http.ResponseWriter, r *http.Request) bool
 
 /*
 FileServer wraps the http.FileServer checking to see if the url path exists in it FileSystems(filesystem.FileSystem, http.FileSystem) first.
@@ -54,12 +54,13 @@ func FileServer(root http.FileSystem, fs filesystem.FileSystem) http.Handler {
 	})
 }
 
-func onDiskHandler(w http.ResponseWriter, r *http.Request, fs http.FileSystem, path string) (goNext bool) {
+func onDiskHandler(w http.ResponseWriter, r *http.Request, fs http.FileSystem, path string) bool {
 	f, err := fs.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// go next
-			return true
+			fmt.Println("file doesn't exist on disk. shuting down", err)
+			return false
 		}
 	}
 
@@ -71,7 +72,7 @@ func onDiskHandler(w http.ResponseWriter, r *http.Request, fs http.FileSystem, p
 	return true
 }
 
-func inMemoryHandler(w http.ResponseWriter, r *http.Request, fs filesystem.FileSystem, path string) (goNext bool) {
+func inMemoryHandler(w http.ResponseWriter, r *http.Request, fs filesystem.FileSystem, path string) bool {
 	file, err := fs.Get(path)
 	if err != nil {
 		fmt.Println("err fs.get, should call next :", err)
