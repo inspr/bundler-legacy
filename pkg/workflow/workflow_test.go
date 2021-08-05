@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -40,12 +41,12 @@ func TestWorkflow_Run(t *testing.T) {
 	tests := []struct {
 		name  string
 		w     *Workflow
-		check func([]*Task) error
+		check func(map[string]*Task) error
 	}{
 		{
 			name: "run a workflow with all tasks done",
 			w:    generateMockWorkflow(),
-			check: func(t []*Task) error {
+			check: func(t map[string]*Task) error {
 				for _, task := range t {
 					if task.State != IDLE {
 						return fmt.Errorf("all tasks should be IDLE")
@@ -57,7 +58,7 @@ func TestWorkflow_Run(t *testing.T) {
 		{
 			name: "run a workflow with IDLE task with dependencies",
 			w:    mockWorkflowWithDependentTasks(),
-			check: func(t []*Task) error {
+			check: func(t map[string]*Task) error {
 				for _, task := range t {
 					if task.State == IDLE {
 						return fmt.Errorf("tasks shouldn't be IDLE")
@@ -69,7 +70,7 @@ func TestWorkflow_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go tt.w.Run()
+			go tt.w.Run(context.WithCancel(context.Background()))
 			time.Sleep(time.Microsecond * 500)
 			err := tt.check(tt.w.Tasks)
 			if err != nil {
@@ -82,7 +83,9 @@ func TestWorkflow_Run(t *testing.T) {
 // Auxiliar methods
 
 func generateMockWorkflow() *Workflow {
-	w := &Workflow{}
+	w := &Workflow{
+		Tasks: map[string]*Task{},
+	}
 
 	w.Add(Task{
 		ID:    "task1",
@@ -97,7 +100,9 @@ func generateMockWorkflow() *Workflow {
 }
 
 func mockWorkflowWithDependentTasks() *Workflow {
-	wf := Workflow{}
+	wf := Workflow{
+		Tasks: map[string]*Task{},
+	}
 
 	wf.Add(Task{
 		ID:    "task2",
@@ -106,13 +111,13 @@ func mockWorkflowWithDependentTasks() *Workflow {
 	wf.Add(Task{
 		ID:    "task3",
 		State: IDLE,
-		DependsOn: []*Task{
-			{
+		Dependencies: map[string]*Task{
+			"task1": {
 				ID:    "task1",
 				State: DONE,
 			},
 		},
-		Run: func(self *Task) {
+		Run: func(ctx context.Context, self *Task) {
 			self.State = DONE
 		},
 	})

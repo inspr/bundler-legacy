@@ -1,12 +1,14 @@
 package workflow
 
 import (
+	"context"
 	"fmt"
 )
 
 // NewWorkflow return new Workflow struct
 func NewWorkflow() *Workflow {
 	return &Workflow{
+		Tasks:   map[string]*Task{},
 		ErrChan: make(chan error),
 	}
 }
@@ -14,16 +16,17 @@ func NewWorkflow() *Workflow {
 // Add adds a new task in a workflow
 func (w *Workflow) Add(task Task) {
 	task.ErrChan = w.ErrChan
-	w.Tasks = append(w.Tasks, &task)
+	w.Tasks[task.ID] = &task
 }
 
 // Run execs a workflow's tasks
-func (w *Workflow) Run() {
+func (w *Workflow) Run(ctx context.Context, cancel context.CancelFunc) {
 Main:
 	for {
 		select {
 		case err := <-w.ErrChan:
 			fmt.Println(err)
+			cancel()
 			break Main
 		default:
 			if allTasksAreDone(w.Tasks) {
@@ -41,16 +44,16 @@ Main:
 				}
 
 				// check if parents are done
-				if allTasksAreDone(task.DependsOn) {
+				if allTasksAreDone(task.Dependencies) {
 					task.State = RUNNING
-					go task.Run(task)
+					go task.Run(ctx, task)
 				}
 			}
 		}
 	}
 }
 
-func allTasksAreDone(tasks []*Task) bool {
+func allTasksAreDone(tasks map[string]*Task) bool {
 	for _, task := range tasks {
 		if task.State != DONE {
 			return false
@@ -58,4 +61,13 @@ func allTasksAreDone(tasks []*Task) bool {
 	}
 
 	return true
+}
+
+func (t *Task) DependsOn(tasks ...*Task) {
+	if len(t.Dependencies) == 0 {
+		t.Dependencies = map[string]*Task{}
+	}
+	for _, task := range tasks {
+		t.Dependencies[task.ID] = task
+	}
 }

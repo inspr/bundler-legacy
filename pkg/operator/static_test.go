@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"os"
 	"reflect"
 	"testing"
@@ -69,7 +70,7 @@ func TestStatic_Task(t *testing.T) {
 		staticOperator := NewMockOperator(options).NewStatic(tt.filesToWrite)
 		got := staticOperator.Task()
 
-		got.Run(&got)
+		got.Run(context.Background(), &got)
 
 		for _, file := range tt.filesToWrite {
 			_, err := staticOperator.Fs.Get("/" + file)

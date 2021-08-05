@@ -50,3 +50,14 @@ func getDirPath(path string) string {
 	dir = dir[:len(dir)-1]
 	return strings.Join(dir, "/")
 }
+
+func hasTemplateFolder(path string) bool {
+	path = path + "/template"
+	var err error
+	if _, err = os.Stat(path); err == nil {
+		return true
+	} else if os.IsNotExist(err) {
+		return false
+	}
+	panic(err)
+}

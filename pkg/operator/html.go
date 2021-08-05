@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"context"
+
 	"inspr.dev/primal/pkg/workflow"
 )
 
@@ -21,7 +23,7 @@ func (html *Html) Task() workflow.Task {
 	return workflow.Task{
 		ID:    "html",
 		State: workflow.IDLE,
-		Run: func(self *workflow.Task) {
+		Run: func(ctx context.Context, self *workflow.Task) {
 			var htmlTmpl = `
 			<!DOCTYPE html>
 			<html lang="en">

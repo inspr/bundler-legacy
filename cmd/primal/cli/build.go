@@ -44,13 +44,19 @@ func runBuild(args []string) {
 		fs := filesystem.NewMemoryFs()
 
 		opts, err := getConfigs(inputPath)
+		primal.Options = opts
+		primal.Options.Root = getDirPath(inputPath)
+
+		if !hasTemplateFolder(primal.Options.Root) {
+			fmt.Println("template folder does not exist")
+			return
+		}
+
 		if err != nil {
 			fmt.Printf("failed to get configs from file: %v\n", err)
 			return
 		}
 
-		primal.Options = opts
-		primal.Options.Root = getDirPath(inputPath)
 		primal.Options.Watch = false
 
 		switch platformType {

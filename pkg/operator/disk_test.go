@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"os"
 	"path"
 	"reflect"
@@ -74,7 +75,7 @@ func TestDisk_Task(t *testing.T) {
 	for _, tt := range tests {
 		diskOperator.Fs.Write(tt.fileName, tt.fileContent)
 
-		testWorkflow.Run()
+		testWorkflow.Run(context.WithCancel(context.Background()))
 
 		if _, err := os.Stat(buildFolder + tt.fileName); os.IsNotExist(err) {
 			if !tt.wantErr {

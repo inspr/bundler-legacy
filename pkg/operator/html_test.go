@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -55,7 +56,7 @@ func TestHtml_Task(t *testing.T) {
 	for _, tt := range tests {
 		got := htmlOperator.Task()
 
-		got.Run(&got)
+		got.Run(context.Background(), &got)
 		_, err := htmlOperator.Fs.Get(tt.wantFileName)
 
 		if (err != nil) != tt.wantErr {
