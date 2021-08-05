@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"inspr.dev/primal/lib/web/server/controller"
+	"inspr.dev/primal/lib/web/server/vm"
 )
 
 // serveCmd implements primald serve command
@@ -52,9 +53,13 @@ func serve(args []string) {
 
 		// TODO: Instantiate VM and send it's reference to Server
 
-		server := controller.NewServer(ctx, inputPort, inputPath)
+		machine := vm.New(ctx)
+		machine.WithScript("run('boy')")
+
+		server := controller.NewServer(ctx, inputPort, inputPath, machine)
 		server.Run()
 		return
 	}
+
 	fmt.Println("path '", inputPath, "' not found")
 }

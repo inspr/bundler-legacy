@@ -9,7 +9,7 @@ import (
 func (s *Server) initRoutes() {
 	h := handlers.NewHandler(s.ctx, s.path)
 
-	s.mux.HandleFunc("/", h.ServeFiles())
+	s.mux.HandleFunc("/", h.ServeFiles(s.machine))
 
 	s.mux.HandleFunc("/healtz", h.HealthCheck())
 }

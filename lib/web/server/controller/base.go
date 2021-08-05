@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"inspr.dev/primal/lib/web/server/vm"
 )
 
 // Server is a struct that handles routes of the rest API
@@ -15,15 +17,18 @@ type Server struct {
 	ctx  context.Context
 	port string
 	path string
+
+	machine vm.Interface
 }
 
 // NewServer configures the server
-func NewServer(ctx context.Context, port, path string) *Server {
+func NewServer(ctx context.Context, port, path string, machine vm.Interface) *Server {
 	s := Server{
-		mux:  http.NewServeMux(),
-		ctx:  ctx,
-		port: port,
-		path: path,
+		mux:     http.NewServeMux(),
+		ctx:     ctx,
+		port:    port,
+		path:    path,
+		machine: machine,
 	}
 	s.initRoutes()
 	return &s

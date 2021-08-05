@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/google/uuid"
+	"inspr.dev/primal/lib/web/server/vm"
 )
 
 var logger *log.Logger
@@ -54,7 +57,7 @@ func NewHandler(ctx context.Context, path string) *Handler {
 }
 
 // ServeFiles serves the files on the directory specified by 'InitBuildDir' handler
-func (h *Handler) ServeFiles() HandlerFunc {
+func (h *Handler) ServeFiles(machine vm.Interface) HandlerFunc {
 	return HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// TODO: if url doesn't contain any extensions, send it to VM
@@ -66,6 +69,14 @@ func (h *Handler) ServeFiles() HandlerFunc {
 		} else {
 			path = h.dataPath + "/index.html"
 		}
+
+		vmResponse := <-machine.Run(vm.Request{
+			UUID: uuid.New(),
+			Path: path,
+		})
+
+		// Return the HTML for the user, sort of
+		w.Write(vmResponse.Data)
 
 		http.ServeFile(w, r, path)
 	})
