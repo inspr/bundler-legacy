@@ -1,4 +1,5 @@
 # Project ignored files
+config.yaml
 **/**/__build__
 **/**/**/**/**/__build__
 **/**/__pycache__

@@ -34,16 +34,16 @@ func (html *Html) Task() workflow.Task {
 				<meta name="theme-color" content="white">
 				<meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
 				<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
-				<link rel="preload" href="/entry-client.css" as="style">
-				<link rel="modulepreload" href="/entry-client.js">
-				<link rel="modulepreload" href="/react-dom.WPNHM4JB.js">
-				<link rel="stylesheet" href="/entry-client.css">
+				<link rel="preload" href="/static/entry-client.css" as="style">
+				<link rel="modulepreload" href="/static/entry-client.js">
+				<link rel="modulepreload" href="/static/react-dom.WPNHM4JB.js">
+				<link rel="stylesheet" href="/static/entry-client.css">
 				<title>Primal</title>
 			</head>
 			<body>
 				<div id="root"></div>
 			</body>
-			<script type="module" src="/entry-client.js" ></script>
+			<script type="module" src="/static/entry-client.js" ></script>
 			</html>`
 
 			html.Fs.Write("/index.html", []byte(htmlTmpl))

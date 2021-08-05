@@ -28,12 +28,12 @@ func (disk *Disk) Task() workflow.Task {
 			path := disk.Options.Root + "/__build__"
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				os.Mkdir(path, 0755)
-				os.Mkdir(path+"/assets", 0755)
+				os.Mkdir(path+"/static", 0755)
 			}
 
 			for key, file := range disk.Fs.Raw() {
 				f, err := os.Create(path + key)
-				if err == nil {
+				if err != nil {
 					self.ErrChan <- err
 				}
 

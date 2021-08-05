@@ -10,26 +10,22 @@ import (
 
 // Bundler contains the data necessary for a bundler to run
 type Bundler struct {
-	mode    string
-	outdir  string
-	fs      filesystem.FileSystem
-	options esbuild.BuildOptions
-	refresh chan bool
+	Mode    string
+	Outdir  string
+	Fs      filesystem.FileSystem
+	Options esbuild.BuildOptions
+	Refresh chan bool
 }
 
 // Extensions define the main supported extension types
 var Extensions = []string{".tsx", ".ts", ".jsx", ".js", ".wasm", ".png", ".jpg", ".svg", ".css"}
 
 // TODO: Definition should be dynamicly setted depending on platform
-var Definition = map[string]string{"__WEB__": "true"}
+var Definition = map[string]string{"__WEB__": "true", "process.env.NODE_ENV": "'production'"}
 var LoadableExtensions = map[string]esbuild.Loader{
 	".css": esbuild.LoaderCSS,
 	".png": esbuild.LoaderFile,
 	".svg": esbuild.LoaderText,
-}
-
-func (bundler *Bundler) Refresh() chan bool {
-	return bundler.refresh
 }
 
 // TODO: review this method
@@ -46,13 +42,13 @@ func AddPlatformExtensions(platform string, baseExt []string) []string {
 
 // Build builds the files in the filesystem
 func (bundler *Bundler) Build() {
-	r := esbuild.Build(bundler.options)
+	r := esbuild.Build(bundler.Options)
 	bundler.writeResultsToFs(r)
 }
 
 // Watch runs Bundler in watch mode
 func (bundler *Bundler) Watch() {
-	bundler.options.Watch = &esbuild.WatchMode{
+	bundler.Options.Watch = &esbuild.WatchMode{
 		OnRebuild: func(r esbuild.BuildResult) {
 			if len(r.Errors) > 0 {
 				fmt.Printf("watch build failed: %d errors\n", len(r.Errors))
@@ -61,80 +57,43 @@ func (bundler *Bundler) Watch() {
 			}
 
 			bundler.writeResultsToFs(r)
-			bundler.refresh <- true
+			bundler.Refresh <- true
 		},
 	}
 
-	r := esbuild.Build(bundler.options)
+	r := esbuild.Build(bundler.Options)
 	bundler.writeResultsToFs(r)
 }
 
 // WithMinification sets bundler to run with minification options
 func (bundler *Bundler) WithMinification() *Bundler {
-	bundler.options.MinifySyntax = true
-	bundler.options.MinifyWhitespace = true
-	bundler.options.MinifyIdentifiers = true
+	bundler.Options.MinifySyntax = true
+	bundler.Options.MinifyWhitespace = true
+	bundler.Options.MinifyIdentifiers = true
 	return bundler
 }
 
 // WithDevelopMode makes bundler run in development mode
 func (bundler *Bundler) WithDevelopMode() *Bundler {
-	bundler.options.Define["process.env.NODE_ENV"] = "\"development\""
-
-	return bundler
-}
-
-// TODO: Fix root to start from ./template
-// Target sets bundler to work in client or server mode
-func (bundler *Bundler) Target(name string) *Bundler {
-	clientEntry := fmt.Sprintf(`
-	import createApp from "@primal/web/client"
-	import Root from "%s"
-	createApp(Root)
-	`, "./template")
-
-	serverEntry := fmt.Sprintf(`
-	import createApp from "@primal/web/server"
-	import Root from "%s"
-	createApp(Root)
-	`, "./template")
-
-	switch name {
-	case "client":
-		bundler.mode = "client"
-		bundler.options.Stdin = &esbuild.StdinOptions{
-			Contents:   clientEntry,
-			ResolveDir: bundler.outdir,
-			Sourcefile: "client.js",
-			Loader:     esbuild.LoaderTSX,
-		}
-	case "server":
-		bundler.mode = "server"
-		bundler.options.Stdin = &esbuild.StdinOptions{
-			Contents:   serverEntry,
-			ResolveDir: bundler.outdir,
-			Sourcefile: "server.js",
-			Loader:     esbuild.LoaderTSX,
-		}
-	default:
-		panic("target must be client or server")
-	}
+	bundler.Options.Define["process.env.NODE_ENV"] = "\"development\""
 
 	return bundler
 }
 
 func (bundler *Bundler) writeResultsToFs(r esbuild.BuildResult) {
 	for _, out := range r.OutputFiles {
-		outFile := strings.TrimPrefix(out.Path, bundler.outdir)
+		outFile := strings.TrimPrefix(out.Path, bundler.Outdir)
 
-		switch bundler.mode {
+		switch bundler.Mode {
 		case "server":
 			outFile = strings.Replace(outFile, "stdin", "entry-server", -1)
 		default:
 			outFile = strings.Replace(outFile, "stdin", "entry-client", -1)
 		}
 
-		err := bundler.fs.Write(outFile, out.Contents)
+		outFile = "/static" + outFile
+
+		err := bundler.Fs.Write(outFile, out.Contents)
 		if err != nil {
 			fmt.Println(err)
 		}
