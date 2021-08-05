@@ -54,7 +54,7 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 // Start runs the dev server with the given filesystem in localhost:3049
 func (s *Server) Start(files filesystem.FileSystem) {
 	// WS handlers
-	go http.HandleFunc("/ws", s.SendBundleUpdates)
+	go http.HandleFunc("/hmr", s.SendBundleUpdates)
 
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var file []byte
