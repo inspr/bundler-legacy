@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,9 +9,11 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
-	"golang.org/x/net/websocket"
 	"inspr.dev/primal/pkg/filesystem"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 type Server struct {
@@ -48,18 +51,10 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
 
-// EchoServer echos the data received on the WebSocket
-func (s *Server) EchoServer(ws *websocket.Conn) {
-	for {
-		<-(s.reload)
-		ws.Write([]byte("some message"))
-	}
-}
-
 // Start runs the dev server with the given filesystem in localhost:3049
 func (s *Server) Start(files filesystem.FileSystem) {
-	// ! needs to be implemeted with gorrila (maybe) so it works
-	// go http.Handle("/ws", websocket.Handler(s.EchoServer))
+	// WS handlers
+	go http.HandleFunc("/hmr", s.SendBundleUpdates)
 
 	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var file []byte
@@ -95,4 +90,42 @@ func GracefullShutdown() {
 
 	<-c
 	os.Exit(1)
+}
+
+type UpdateMessage struct {
+	Updated bool
+	Errors  bool
+}
+
+// SendBundleUpdates handler is write only WebSocket connection
+func (s *Server) SendBundleUpdates(w http.ResponseWriter, r *http.Request) {
+	c, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer c.Close(websocket.StatusInternalError, "websocket is closed")
+
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute*10)
+	defer cancel()
+
+	ctx = c.CloseRead(ctx)
+
+	for {
+		select {
+		case <-ctx.Done():
+			c.Close(websocket.StatusNormalClosure, "")
+			return
+		case <-(s.reload):
+			msg := UpdateMessage{
+				Updated: true,
+				Errors:  false,
+			}
+			err = wsjson.Write(ctx, c, msg)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
+	}
 }
