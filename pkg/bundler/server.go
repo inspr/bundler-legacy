@@ -8,11 +8,11 @@ import (
 // NewBundler returns a bundler structure with the given configs
 func NewServerBundler(outdir string, fs filesystem.FileSystem) *Bundler {
 	return &Bundler{
-		refresh: make(chan bool, 1000),
-		mode:    "server",
-		outdir:  outdir,
-		fs:      fs,
-		options: esbuild.BuildOptions{
+		Refresh: make(chan bool, 1000),
+		Mode:    "server",
+		Outdir:  outdir,
+		Fs:      fs,
+		Options: esbuild.BuildOptions{
 			Bundle:            true,
 			Incremental:       true,
 			Metafile:          true,
