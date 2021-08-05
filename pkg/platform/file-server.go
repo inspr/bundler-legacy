@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"inspr.dev/primal/pkg/filesystem"
