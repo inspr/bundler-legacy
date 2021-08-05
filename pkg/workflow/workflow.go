@@ -17,7 +17,6 @@ func NewWorkflow() *Workflow {
 func (w *Workflow) Add(task Task) {
 	task.ErrChan = w.ErrChan
 	w.Tasks[task.ID] = &task
-	// w.Tasks = append(w.Tasks, &task)
 }
 
 // Run execs a workflow's tasks

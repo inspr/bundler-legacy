@@ -16,7 +16,6 @@ func (p *Platform) Web() api.PlatformInterface {
 	web := &Web{
 		Platform: p,
 	}
-	web.Platform.Workflow.Tasks = map[string]*workflow.Task{}
 	for _, ops := range operator.MainOps {
 		web.Platform.Workflow.Add(ops.Task())
 	}

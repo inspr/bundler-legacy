@@ -26,7 +26,7 @@ func (disk *Disk) Task() workflow.Task {
 		Run: func(self *workflow.Task) {
 			path := disk.Options.Root + "/__build__"
 			dir := disk.Options.Root + "/template"
-			if _, erro := os.Stat(dir); erro == nil {
+			if _, err := os.Stat(dir); err == nil {
 				if _, err := os.Stat(path); os.IsNotExist(err) {
 					os.Mkdir(path, 0755)
 					os.Mkdir(path+"/assets", 0755)
@@ -42,8 +42,10 @@ func (disk *Disk) Task() workflow.Task {
 				}
 
 				self.State = workflow.DONE
-			} else if os.IsNotExist(erro) {
-				self.ErrChan <- erro
+			} else if os.IsNotExist(err) {
+				self.ErrChan <- err
+			} else {
+				panic(err)
 			}
 		},
 	}
