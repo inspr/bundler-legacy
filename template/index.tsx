@@ -232,7 +232,7 @@ const Root = () => (
 )
 
 const WsUpdate = () => {
-    const conn = new WebSocket(`ws://${location.host}/ws`)
+    const conn = new WebSocket(`ws://${location.host}/hmr`)
 
     conn.addEventListener('close', (ev) => {
         console.log(
