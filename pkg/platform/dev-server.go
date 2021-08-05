@@ -51,47 +51,6 @@ func SetCacheDuration(w http.ResponseWriter, seconds int64) {
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d", seconds))
 }
 
-// Start runs the dev server with the given filesystem in localhost:3049
-func (s *Server) Start(files filesystem.FileSystem) {
-	// WS handlers
-	go http.HandleFunc("/hmr", s.SendBundleUpdates)
-
-	go http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var file []byte
-		var err error
-
-		path := r.URL.Path[0:]
-
-		switch path {
-		case "/":
-			file, err = files.Get("/index.html")
-		default:
-			file, err = files.Get(path)
-		}
-
-		if err == nil {
-			SetContentType(w, path)
-			// SetCacheDuration(w, 31536000)
-			w.Write(file)
-		} else {
-			w.WriteHeader(404)
-		}
-	})
-
-	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
-
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 3049), nil))
-}
-
-// GracefullShutdown gracefully shuts down the platform bein executed
-func GracefullShutdown() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-
-	<-c
-	os.Exit(1)
-}
-
 type UpdateMessage struct {
 	Updated bool
 	Errors  bool
@@ -128,4 +87,26 @@ func (s *Server) SendBundleUpdates(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+// Start runs the dev server with the given filesystem in localhost:3049
+func (s *Server) Start(files filesystem.FileSystem) {
+	// HotReload
+	go http.HandleFunc("/hmr", s.SendBundleUpdates)
+
+	// FileServer
+	fileServer := FileServer(http.Dir("__build__"), files)
+	go http.Handle("/", http.StripPrefix("/", fileServer))
+
+	fmt.Printf("Available on http://127.0.0.1:%d\n", 3049)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 3049), nil))
+}
+
+// GracefullShutdown gracefully shuts down the platform bein executed
+func GracefullShutdown() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	<-c
+	os.Exit(1)
 }
