@@ -48,7 +48,7 @@ func runBuild(args []string) {
 		primal.Options.Root = getDirPath(inputPath)
 
 		if !hasTemplateFolder(primal.Options.Root) {
-			fmt.Println("template folder does not exists")
+			fmt.Println("template folder does not exist")
 			return
 		}
 
